@@ -10,26 +10,20 @@ var demInfo= {
 	"rateWordList":"unknown",
 	"targetWordList":"unknown",
 }
-
 var currentIndex=0;
 var demoWords=["this","is","where","the","list","of","words","will","appear"]
 var wordRateDict={}
 var rateCounter=0
 var confCounter=0
 var wordRateTicker=0
-var testWords=["bubble",,"change","skate","singer","faith","sweet","learn","nothing","machine","mitten","stapler","bucket","life","muppet","ball","skill","source","change","cache","add","object"]
-var workerId="volunteer"
-
-var started=false;
 var dataWritten=false
-
 var wordDemoDone=false
+var basic=io("/")
 
-var basic=io("/");
+//managing socket events sent from server
 basic.on('connect', function() {
 	console.log("Connected to word demo server!");
 });
-
 
 basic.on('catch stims',function (data) {
 	demInfo.targetWordList=data["memoryTargets"]
@@ -44,12 +38,7 @@ basic.on('write result',function(data) {
 	dataWritten=true
 })
 
-
-
-
 function makeWordRating(wList) {
-	//eventually trigger upon receipt of stims
-
 	for (var i=0;i<wList.length;i++) {
 		var seenOrder=demInfo.targetWordList.indexOf(wList[i]);
 		var wasSeen;
@@ -68,10 +57,8 @@ function makeWordRating(wList) {
 								"confidence":"unknown"
 							}
 	}
-
 	$(".wordrateRow-"+wList[0]).show();
 }
-
 
 function wordLoop(wordList) {
 	if (currentIndex > wordList.length) {
@@ -99,14 +86,14 @@ $(document).ready(function() {
 	$("#welcome").show()
 	$(".spinner").hide()
 
+//Consent to participate (in includes/welcome.html)
 	$("#primaryConsent").click(function() {
 		$("#welcome").hide()
 		$("#demInfo").show()
-		console.log("asking for stims.")
 		basic.emit('get stims')
-		
 	})
 
+//Humanness test verification (in includes/deminfo.html)
 	$("#humanTest").click(function() {
 		$("#demStart").hide()
 		var enteredTest = $("#bCheck").val()
@@ -120,30 +107,29 @@ $(document).ready(function() {
 		}
 	})
 
+//current Age (in includes/deminfo.html)
 	$("#enterAge").click(function() {
 		var myage=Number($("#age").val())
 		if (myage<18 || myage>99 || $("#age").val()=="") {
 			$("#age").css("border-color","red")
 			$(".needAge").show()
 		} else {
-			//write age to demInfo
 			demInfo.age=myage
 			$(".age").hide()
 			$(".gender").show()
 		}
 	})
 
+//Gender (in includes/deminfo.html)
 	$("#gender-status input").on('change',function() {
-		//genderChosen=true
 		var wutclicked=$('input[name=gender]:checked',"#gender-status").val()
 		demInfo.gender=wutclicked
 		$(".gender").hide()
 		$(".langs").show()
 	});
 
+//Whether participant considers themselves an L1 English speaker (in includes/deminfo.html)
 	$("#english-status input").on('change',function() {
-		//englishChosen=true
-
 		var wutclicked=$('input[name=engstatus]:checked',"#english-status").val()
 		$(".langs").hide()
 		if (wutclicked=="EngL2") {
@@ -156,6 +142,7 @@ $(document).ready(function() {
 		}
 	});
 
+//Self-report of bilingualism for L1 English speakers (in includes/deminfo.html)
 	$("#biling-status input").on('change',function() {
 		var wutclicked=$('input[name=bilingstatus]:checked',"#biling-status").val()
 		$("#demInfo").hide()
@@ -167,8 +154,8 @@ $(document).ready(function() {
 		}
 	});
 
+//Self-report age of acquisition for participants who report a non English L1 (in includes/deminfo.html)
 	$("#enterAoA").click(function() {
-		///get aoa for non natives
 		var myage=Number($("#aoa").val())
 		if ((myage<99 || myage>=0) && $("#aoa").val()!="") {
 			$("#demInfo").hide()
@@ -179,6 +166,7 @@ $(document).ready(function() {
 		}
 	});
 
+//Starts demo word list after instruction (in includes/instructions.html)
 	$(".showWordDemo").click(function() {
 		currentIndex=0
 		$(".instruct").hide()
@@ -186,103 +174,46 @@ $(document).ready(function() {
 		wordLoop(demoWords)
 	})
 
+//Starts real word list (in includes/instructions.html)
 	$("#showWordList").click(function() {
 		currentIndex=0
 		$(".endWordDemo").hide();
 		$("#endDemo").hide();
 		$("#wordLoop").show();
 		wordLoop(demInfo.targetWordList)
-
 	})
 
-	/*$(".showPicDemo").click(function() {
-		currentIndex=0
-		$(".instruct").hide()
-		$("#picLoop").show()
-		imageLoop(demoPics)
-	})
+//Vimeo API to detect end of video (in includes/instructions.html)
+	var iframeA = $("#vidA");
 
-	$("#showPicList").click(function() {
-		currentIndex=0
-		$(".endPicDemo").hide();
-		$("#endDemo").hide();
-		$("#picLoop").show();
-		imageLoop(demInfo.targetPicList)
-	})*/
+	var playerA = new Vimeo.Player(iframeA);
 
-	/*$("#endPicBreak").click(function() {
-		$("#videoBreakA").hide()
-		$("#endDemo").hide()
-		///show instructions first?
-		$("#instructPicRatings").show()
-	});*/
+	//hides video and shows button at end of video
+	playerA.on('ended', function() {
+		console.log("detected end of Video A")
+		$("#vidA").hide()
+		$("#endBreak").show()
+
+	});
+//end vimeo stuff
+
+//Hides the interval video and shows the button to go to word rating instructions (includes/instructions.html)
 	$("#endBreak").click(function() {
 		$("#videoBreak").hide()
 		$("#endDemo").hide()
 		$("#instructWordRatings").show()
 	});
 
-	/*$("#startPicRate").click(function() {
-		$("#picRaterSection").show()
-		$("#instructPicRatings").hide()
+//starts word ratings (in includes/instructions.html)
+	$("#startWordRate").click(function() {
+		$("#instructWordRatings").hide()
+		$("#wordRaterSection").show()
 	})
 
-	$(".pic-seenGroup").click(function() {
-		var clickedid=$(this).attr('id')
-		var clickinfo=clickedid.split("-")
-		console.log(clickinfo)
-		var curTarget=clickinfo[1]
-		var result=clickinfo[0]
-		if (result=="seen") {
-			result=true
-		} else {
-			result=false
-		}
-		if (picRateDict[curTarget].seenClickCount == 0) {
-			//if this is the first click, register in overall count
-			rateCounter+=1
-		}
-		picRateDict[curTarget].seenClickCount+=1
-		picRateDict[curTarget].thinksSeen=result
-		if (picRateDict[curTarget].seenClickCount > 0 && picRateDict[curTarget].rateClickCount > 0) {
-			$(".endRateRow").show()
-		}
-		if(result) {//if you selected seen,
-			$(this).removeClass('btn-outline-success').addClass('btn-success')//remove the outline and fill it
-			$("#notseen-"+curTarget).removeClass('btn-danger').addClass('btn-outline-danger')
-		} else {
-			$(this).removeClass('btn-outline-danger').addClass('btn-danger')
-			$("#seen-"+curTarget).removeClass('btn-success').addClass('btn-outline-success')
-		}
-	});
-
-	$(".pic-confGroup").click(function() {
-		var clickedid=$(this).attr('id')
-		var clickinfo=clickedid.split("-")
-		var curTarget=clickinfo[1]
-		var result=clickinfo[0]
-
-		$(".pic-confGroup").removeClass('btn-primary').addClass('btn-outline-primary')
-		$(this).removeClass('btn-outline-primary').addClass('btn-primary')
-
-		if (picRateDict[curTarget].rateClickCount == 0) {
-			//if this is the first click, register in overall count
-			confCounter+=1
-		}
-		picRateDict[curTarget].rateClickCount+=1
-		picRateDict[curTarget].confidence=result
-		if (picRateDict[curTarget].seenClickCount > 0 && picRateDict[curTarget].rateClickCount > 0) {
-
-			$(".endRateRow").show()
-		}
-
-		picRateDict[curTarget].confidence=result
-	});*/
-
+//registers a click on the familiarity (have you seen it or not) button (in index.html)
 	$(".word-seenGroup").click(function() {
 		var clickedid=$(this).attr('id')
 		var clickinfo=clickedid.split("-")
-		//console.log(clickinfo)
 		var curTarget=clickinfo[1]
 		var result=clickinfo[0]
 		if (result=="seen") {
@@ -308,15 +239,14 @@ $(document).ready(function() {
 		}
 	});
 
+//registers a click on the confidence (recollection) rating (in index.html)
 	$(".word-confGroup").click(function() {
 		var clickedid=$(this).attr('id')
 		var clickinfo=clickedid.split("-")
 		var curTarget=clickinfo[1]
 		var result=clickinfo[0]
-
 		$(".word-confGroup").removeClass('btn-primary').addClass('btn-outline-primary')
 		$(this).removeClass('btn-outline-primary').addClass('btn-primary')
-
 		if (wordRateDict[curTarget].rateClickCount == 0) {
 			//if this is the first click, register in overall count
 			confCounter+=1
@@ -324,13 +254,12 @@ $(document).ready(function() {
 		wordRateDict[curTarget].rateClickCount+=1
 		wordRateDict[curTarget].confidence=result
 		if (wordRateDict[curTarget].seenClickCount > 0 && wordRateDict[curTarget].rateClickCount > 0) {
-
 			$(".endWordRateRow").show()
 		}
-
 		wordRateDict[curTarget].confidence=result
 	});
 
+//advances to the next familiarity/recollection rating (in index.html)
 	$(".nextRate-word").click(function() {
 		var oldTarget=demInfo.rateWordList[wordRateTicker]
 		$(".wordrateRow-"+oldTarget).hide()
@@ -355,29 +284,9 @@ $(document).ready(function() {
 			$(".endWordRateRow").hide()
 			$(".wordrateRow-"+newTarget).show()
 		}
-	})
-
-
-	$("#startWordRate").click(function() {
-		$("#instructWordRatings").hide()
-		$("#wordRaterSection").show()
-	})
-
-
-	var iframeA = $("#vidA");
-
-    var playerA = new Vimeo.Player(iframeA);
-
-    playerA.on('ended', function() {
-    	console.log("detected end of Video A")
-    	$("#vidA").hide()
-		$("#endBreak").show()
-
-    });
-
-    $("#showdebrief").click(function() {
-    	$("#debrief").modal('show')
-    })
-
-
-})
+	});
+//shows the debrief modal at the end (in includes/instructions.html)
+	$("#showdebrief").click(function() {
+		$("#debrief").modal('show')
+	});
+})///close of document.ready function
