@@ -1,0 +1,128 @@
+<section class="slice slice-lg pt-lg-6 pb-0 pb-lg-6 bg-section-secondary" id="demInfo" style="display:none">
+	<div class="container">
+			<!-- Title -->
+			<!-- Section title -->
+		<div class="row mb-5 justify-content-center text-center">
+			<div class="col">
+				<h2 class=" mt-4">About You</h2>
+				<div class="mt-2">
+					<p class="lead lh-180">Before we get started with the task, we have a few basic questions about you. Once these are done you'll receive more specific instructions about the task.</p>
+				</div>
+			</div>
+		</div>
+			<!-- Card -->
+		<div class="row mt-5">
+			<div class="col">
+				<div class="card" id="demStart">
+					<div class="card-body pb-5">
+						<h5 class="h4 lh-130 mb-3">I am a genuine human</h5>
+						<p class="text-muted mb-0">We'll start by making sure you aren't a bot or a script. Follow the instructions below carefully so we can make sure you aren't a robot.</p>
+						<ul>
+							<li>Copy the last two words of this sentence into the box below, and add an exclamation point for style</li>
+							<li>Move the slider all the way here or there - it doesn't matter which one</li>
+						</ul>
+						<div class="row">
+							<div class="col">
+								<input id="bCheck" type="text" style="width:250px"class="form-control" placeholder="See above">
+							</div>
+							<div class="col">
+								<div class="d-flex justify-content-center slidecontainer">
+									<input type="range" min="1" max="100" value="50" class="inactive-slider" id="bSlideCheck">
+								</div>
+								<div class="d-flex justify-content-between">
+									<div class="p-2">Here</div>
+									<div class="p-2">There</div>
+								</div>
+							</div>
+						</div>
+						<a href="#" class="btn btn-info btn-icon" id="humanTest">
+							<span class="btn-inner--text">Continue</span>
+							<span class="btn-inner--icon"><i data-feather="chevron-right"></i></span>
+						</a>
+					</div>
+				</div>
+				<div class="card" id="itsAbomination" style="display:none">
+					<div class="card-body pb-5">
+						<h5 class="h4 lh-130 mb-3">I don't mean to be rude, but you don't seem to be human.</h5>
+						<p class="text-muted mb-0">We haven't collected any data. If you think this is an error, just refresh the page and try again. You will have to consent to participate again.</p>
+					</div>
+				</div>
+				<div class="card" id="itsHuman" style="display:none">
+					<div class="card-body pb-5">
+						<h5 class="h4 lh-130 mb-3">Clever human! Now answer the questions below.</h5>
+						<p class="age">How old are you?</p>
+						<p class="gender" style="display:none">What is your gender?</p>
+						<p class="langs" style="display:none">Tell us a bit about your English.</p>
+						<p class="nativeEng" style="display:none">Do you know any languages other than English?</p>
+						<p class="nnEng" style="display:none">How old were you when you started learning English?</p>
+
+						<div class="row age">
+							<div class="col">
+								<input type="text" style="width:150px"class="form-control" id="age" placeholder="Enter age">
+								<p> <span class="text-danger needAge" style="display:none">Please enter a valid age.</span></p>
+							</div>
+						</div>
+						<a href="#" class="btn btn-primary btn-icon age" id="enterAge"style="margin-top:5px; display:none">
+								<span class="btn-inner--text">Next</span>
+								<span class="btn-inner--icon"><i data-feather="chevron-right"></i></span>
+							</a>
+						<div class="row gender" style="display:none">
+							<div class="col">
+								<div class="btn-group-toggle d-flex justify-content-center" id="gender-status" data-toggle="buttons">
+									<label class="btn btn-outline-info">
+										<input type="radio" name="gender" value="male" autocomplete="off">Man
+									</label>
+									<label class="btn btn-outline-info">
+										<input type="radio" name="gender" value="female" autocomplete="off">Woman
+									</label>
+									<label class="btn btn-outline-info">
+										<input type="radio" name="gender" value="other" autocomplete="off">Other
+									</label>
+									<label class="btn btn-outline-info">
+										<input type="radio" name="gender" value="prefno" autocomplete="off">Prefer not to say
+									</label>
+								</div>
+							</div>
+						</div>
+						<div class="row langs" style="display:none">
+							<div class="col" >
+								<div class="btn-group-toggle d-flex justify-content-center" id="english-status" data-toggle="buttons">
+									<label class="btn btn-outline-info">
+										<input type="radio" name="engstatus" value="EngL1" autocomplete="off"> My first language is English
+									</label>
+									<label class="btn btn-outline-info">
+										<input type="radio" name="engstatus" value="EngL2" autocomplete="off"> English is not my first language
+									</label>
+								</div>
+							</div>
+						</div>
+						<div class="row nativeEng" style="display:none">
+							<div class="col">
+								<div class="btn-group-toggle d-flex justify-content-center" id="biling-status" data-toggle="buttons">
+									<label class="btn btn-outline-info">
+										<input type="radio" name="bilingstatus" value="monoling" autocomplete="off"> No, I only know English.
+									</label>
+									<label class="btn btn-outline-info">
+										<input type="radio" name="bilingstatus" value="biling" autocomplete="off"> I know some other language(s)
+									</label>
+								</div>
+							</div>
+						</div>
+						<div class="row nnEng" style="display:none">
+							<div class="col">
+								<input type="text" style="width:150px"class="form-control" id="aoa" placeholder="Enter age">
+								<p class="text-danger needAge" style="display:none">Please enter a valid age.</p>
+							</div>
+							
+						</div>
+						<a href="#" class="btn btn-primary btn-icon nnEng" id="enterAoA" style="margin-top:5px; display:none">
+								<span class="btn-inner--text">Next</span>
+								<span class="btn-inner--icon"><i data-feather="chevron-right"></i></span>
+							</a>
+
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</section>

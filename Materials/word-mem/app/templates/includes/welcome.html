@@ -1,0 +1,84 @@
+<div class="modal fade" id="debrief" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+  				<div class="modal-dialog modal-dialog-centered" role="document">
+    				<div class="modal-content">
+      					<div class="modal-header">
+       						<h5 class="modal-title" >About the study</h5>
+        					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          						<span aria-hidden="true">&times;</span>
+       						</button>
+      					</div>
+      					<div class="modal-body">
+       					 <p>Thanks for taking part! The study was about how we remember words or images that have different amounts of information. <em>Information</em> in this context means something quite specific, but roughly, it relates to common something is: rare words like <em>ocelot</em> are generally more informative than more common words like <em>cat</em>. The list of words and images we gave you had mixed up rare and common words and items in a particular way, either by mixing them throughout the list or clumping them all at the begining or end. We're looking to see how the rarity of words or images, and the order in which they're presented can help (or hinder!) how well people can process and recall them.</p>
+       					 <p>Thanks for your time and have a nice day!</p>
+      					</div>
+      					<div class="modal-footer">
+        					<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      					</div>
+    				</div>
+  				</div>
+			</div>
+<div class="modal fade" id="repeatProblem" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+  	<div class="modal-dialog modal-dialog-centered" role="document">
+    	<div class="modal-content">
+      		<div class="modal-header">
+       			<h5 class="modal-title text-danger" >Ooops...</h5>
+        		<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          			<span aria-hidden="true">&times;</span>
+       			</button>
+      		</div>
+      		<div class="modal-body">
+       			<p>Our records show you've already completed this task, and we can only record your responses once.</p>
+       			<p>Thanks for your time and have a nice day!</p>
+      		</div>
+      		<div class="modal-footer">
+        		<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      		</div>
+    	</div>
+  	</div>
+</div>
+
+<section class="slice py-7" style="display:none" id="welcome">
+	<div class="container">
+		<div class="row row-grid align-items-center">
+
+			<div class="col-12 col-md-12 col-lg-12 order-md-1 pr-md-5">
+				<!-- Heading -->
+				<h1 class="display-4 text-center text-md-left mb-3">Welcome to the experiment!</h1>
+					<!-- Text -->
+				<p>This is a study on word memory. Additional customised information should be included here as needed, e.g., who is conducting the study, where they are based, what compensation (if any) will be provided, and how long it will take.</p>
+				<p>Here you can describe in broad terms what the task will involve.</p>
+				<p>Here you should link to more detailed information, which participants can download as a PDF and keep for their records.</p>
+				<p>Clicking "Start" below indicates that:</p>
+				<ul>
+					<li><p>These bullet points should list the most relevant points about participation and what participants are consenting to</p></li>
+					<li><p>You agree that your anonymised data may be made publicly available for general use, e.g., released as part of scholarly publication.</p></li>
+					<li><p>You voluntarily agree to participate and can stop or withdraw at any time without penalty.</p></li>
+				</ul>
+
+				<p>If you do not agree to these terms and don't wish to participate, simply close this window and have a nice day!</p></span>
+				<p class="text-warning">This is a demo version of the experiment. No data is being collected, but you are welcome to try it (click start).</p>
+					<!-- Buttons -->
+				<div class="text-center text-md-left mt-5">
+					<a href="#" class="btn btn-primary btn-icon" id="primaryConsent">
+						<span class="btn-inner--text">Start
+						<span class="btn-inner--icon"><i data-feather="chevron-right"></i></span>
+					</a>
+				</div>
+			</div>
+		</div>
+	</div>
+</section>
+<section class="slice py-7" style="display:none" id="endStudy">
+	<div class="container">
+		<div class="row row-grid align-items-center">
+
+			<div class="col-12 col-md-12 col-lg-12 order-md-1 pr-md-5">
+				<!-- Heading -->
+				<h1 class="display-4 text-center text-md-left mb-3">Thanks for participating!</h1>
+				<h1 class="display-4 text-center text-md-left mb-3 text-success" id="writeSuccess">Your data has been collected.</h1>
+				<h3> If you'd like to know more about the study, <a id="showdebrief" href="#">click here</a>.</h3>
+				<h2 class="text-danger" style="display:none" id="writeError">There's been a problem writing your data, please contact the experimenter to help the solve the problem.</h2>
+			</div>
+		</div>
+	</div>
+</section>

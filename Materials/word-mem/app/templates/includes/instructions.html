@@ -1,0 +1,140 @@
+
+<section class="slice py-7 instruct" style="display:none" id="instructOne">
+	<div class="container">
+		<div class="row row-grid align-items-center">
+
+			<div class="col-12 col-md-12 col-lg-12 order-md-1 pr-md-5">
+				<!-- Heading -->
+				<h1 class="display-4 text-center text-md-left mb-3">Memory task instructions</h1>
+					<!-- Text -->
+				<p class="lead text-center text-md-left text-muted">
+					Welcome and thanks for agreeing to take part. The study will take place in a few distinct parts:
+				</p>
+				<ul>
+					<li>First, you'll see a list of words shown on screen. Try to remember them.</li>
+					<li>Second, you'll watch a short video to have a break.</li>
+					<li>We'll show you another list of words, and you'll decide whether you saw them in the first list (or not). You'll also tell us how sure you are about each decision.</li>
+					<li>Then, you'll finish the task.</li>
+				</ul>
+				<p>You'll have more detailed instructions before each step, and we'll explain the decisions in more detail after you've had the video break.We'll start by showing you a demo of how you will see the words you will be asked to remember.</p>
+					<!-- Buttons -->
+				<div class="text-center text-md-left mt-5">
+					<a href="#" class="btn btn-primary btn-icon showWordDemo">
+						<span class="btn-inner--text">Start Demo</span>
+						<span class="btn-inner--icon"><i data-feather="chevron-right"></i></span>
+					</a>
+				</div>
+			</div>
+		</div>
+	</div>
+</section>
+<section class="slice py-7 instruct" style="display:none" id="instructTwo">
+	<div class="container">
+		<div class="row row-grid align-items-center">
+
+			<div class="col-12 col-md-12 col-lg-12 order-md-1 pr-md-5">
+				<!-- Heading -->
+				<h1 class="display-4 text-center text-md-left mb-3">Memory task Part Two</h1>
+					<!-- Text -->
+				<p class="lead text-center text-md-left text-muted">
+					Now for the second part of the experiment. You'll do more or less what you just did with <span class="picsFirst" style="display:none"> pictures, only now with a list of words.</span><span class="wordsFirst" style="display:none"> words, only now with a series of pictures.</span>
+				</p>
+				<ul class="picsFirst" style="display:none">
+					<li>First, you'll see a list of words shown on screen. Try to remember them.</li>
+					<li>Second, you'll watch a short video to have a break.</li>
+					<li>We'll show you another list of words, and you'll decide whether you saw them in the first list (or not). You'll also tell us how sure you are about each decision.</li>
+				</ul>
+				<ul class="wordsFirst" style="display:none">
+					<li>First, you'll see a series of pictures shown on screen. Try to remember them.</li>
+					<li>Second, you'll watch a short video to have a break.</li>
+					<li>We'll show you longer series of pictures, and you'll decide whether you saw them in the first series (or not). You'll also tell us how sure you are about each decision.</li>
+				</ul>
+				<p>You'll have more detailed instructions before each step, and we'll explain the decisions in more detail after you've had your video break. As before, we'll start by showing you a demo of how you will see the <span class="picsFirst" style="display:none">words</span> <span class="wordsFirst" style="display:none">pictures</span> you will be asked to remember.</p>
+					<!-- Buttons -->
+				<div class="text-center text-md-left mt-5">
+					<a href="#" class="btn btn-primary btn-icon showWordDemo wordsFirst" style="display:none">
+						<span class="btn-inner--text">Start Demo</span>
+						<span class="btn-inner--icon"><i data-feather="chevron-right"></i></span>
+					</a>
+					<a href="#" class="btn btn-primary btn-icon showPicDemo picsFirst" style="display:none">
+						<span class="btn-inner--text">Start Demo</span>
+						<span class="btn-inner--icon"><i data-feather="chevron-right"></i></span>
+					</a>
+				</div>
+			</div>
+		</div>
+	</div>
+</section>
+<section class="slice py-7 instruct" style="display:none" id="endDemo">
+	<div class="container">
+		<div class="row row-grid align-items-center">
+
+			<div class="col-12 col-md-12 col-lg-12 order-md-1 pr-md-5">
+				<!-- Heading -->
+				<h1 class="display-4 text-center text-md-left mb-3">Ready for the real thing?</h1>
+
+					<!--to the test experiment</h1>-->
+					<hr>
+					<p style="display:none" class="endWordDemo">The real list will be longer, and will be a list of unrelated words instead of a sentence. Otherwise, it will be the same: focus on the cross in the centre of the screen to see each word.</p>
+					<p style="display:none" class="endPicDemo">The real series will be longer, but otherwise, it will be the same: focus on the cross in the centre of the screen to see each picture.</p>
+					<p>Ready to start?</p>
+					<!-- Buttons -->
+				<div class="text-center text-md-left mt-5">
+					<a href="#" class="btn btn-primary btn-icon endWordDemo" id="showWordList" style="display:none">
+						<span class="btn-inner--text">Start</span>
+						<span class="btn-inner--icon"><i data-feather="chevron-right"></i></span>
+					</a>
+					<a href="#" class="btn btn-primary btn-icon endPicDemo" style="display:none" id="showPicList">
+						<span class="btn-inner--text">Start</span>
+						<span class="btn-inner--icon"><i data-feather="chevron-right"></i></span>
+					</a>
+				</div>
+			</div>
+		</div>
+	</div>
+</section>
+<section class="slice py-7 instruct" style="display:none" id="videoBreak">
+	<div class="container">
+		<div class="row row-grid align-items-center">
+
+			<div class="col-12 col-md-12 col-lg-12 order-md-1 pr-md-5">
+				<!-- Heading -->
+				<h3 class="text-center">Before the next part, please take a short break by watching the video below.</h3>
+					<p class=
+					"text-center">When it's over, a button will appear. Click it to continue.</p>
+					<div class="text-center mt-5">
+						<a href="#" class="btn btn-primary btn-icon" id="endBreak" style="display:none">
+							<span class="btn-inner--text">Next</span>
+							<span class="btn-inner--icon"><i data-feather="chevron-right"></i></span>
+						</a>
+					</div>
+					<div style="padding:56.25% 0 0 0;position:relative;"><iframe src="https://player.vimeo.com/video/69225705" style="position:absolute;top:0;left:0;width:100%;height:100%;" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen id=
+						'vidA'></iframe></div><script src="https://player.vimeo.com/api/player.js"></script>
+					<!-- Buttons -->
+				
+			</div>
+		</div>
+	</div>
+</section>
+<section class="slice py-7 instruct" style="display:none" id="instructWordRatings">
+	<div class="container">
+		<div class="row row-grid align-items-center">
+
+			<div class="col-12 col-md-12 col-lg-12 order-md-1 pr-md-5">
+				<!-- Heading -->
+				<h3 class="text-center">What can you remember?</h3>
+					<p>Now we want to know what you remember about the words you saw earlier.</p>
+					<p>On the next page you'll rate a longer list of words - some of them are words you just saw, and some of them aren't. For each word, we want to know if you think you saw it (<b >Yes</b> or <b>No</b>), and how confident you are about your answer (<b>Not at all</b> confident, <b>Sort of</b> confident, or <b>Very</b> confident).</p>
+					<p>Once you've told us whether you think you've seen a word, and let us know how confident you are about your decision, you can go on to the next word. Your progress will show at the top</p>
+					<h3>Ready? Click 'Start' below to begin.</h3>
+					<!-- Buttons -->
+				<div class="text-center text-md-left mt-5">
+					<a href="#" class="btn btn-primary btn-icon" id="startWordRate">
+						<span class="btn-inner--text">Start</span>
+						<span class="btn-inner--icon"><i data-feather="chevron-right"></i></span>
+					</a>
+				</div>
+			</div>
+		</div>
+	</div>
+</section>
