@@ -1,0 +1,37 @@
+ReadDataFromFile = function(file){
+    # Read in data from an  Excel file and tidy it up
+    # "file" must be a valid path to the file.
+    library(readxl)
+    library(dplyr)
+
+    data = read_excel(file)
+
+    # Add on the data about word frequency:
+    data=full_join(wordlist[,c("Word","Category")],data,by="Word");
+
+
+    data=rename(data,"Judgment"="O/N","Stimulus"="Seen/Unseen","Confidence"="S/P/G")
+
+    data$Confidence = as.factor(data$Confidence)
+    data$Judgment = as.factor(data$Judgment)
+    data$Stimulus = as.factor(data$Stimulus)
+
+    data$Confidence = recode(data$Confidence,"G"="Guess","P"="Possible","S"="Sure")
+
+    # Extract a "signal" from the confidence scores, as follows
+    data$ConfidenceSignal = NA
+    data$ConfidenceSignal[data$Confidence=="Sure" & data$Judgment=="O"] = 6; #  seen before
+    data$ConfidenceSignal[data$Confidence=="Possible" & data$Judgment=="O"] = 5; # possibly seen before
+    data$ConfidenceSignal[data$Confidence=="Guess" & data$Judgment=="O"] = 4; # guess - seen before?
+    data$ConfidenceSignal[data$Confidence=="Guess" & data$Judgment=="N"] = 3; # guess - not seen ?
+    data$ConfidenceSignal[data$Confidence=="Possible" & data$Judgment=="N"] = 2; # possibly  not seen
+    data$ConfidenceSignal[data$Confidence=="Sure" & data$Judgment=="N"] = 1; # definitely not seen
+
+    data$Hit = with(data, Stimulus=="O" & Judgment=="O")
+    data$FalseAlarm = with(data, Stimulus=="N" & Judgment=="O")
+    data$CorrectReject = with(data, Stimulus=="N" & Judgment=="N")
+    data$Miss = with(data, Stimulus=="O" & Judgment=="N")
+
+    return(data)
+
+}

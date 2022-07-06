@@ -1,0 +1,44 @@
+# This code was written by Jenny C, A. Read in Rstudio Version 1.2.1335 using R version 3.6.0 (2019-04-26).
+
+# All code you will want to run is in folder "src"
+# All functions called by this code are in folder "lib"
+# All output (results files, graphs and Word docs) are written to folder "output"
+
+# This is the processing pipeline:
+
+# Run the code from within src. Assuming the working directory is currently the top-level folder where this
+# Readme.R file is located, all you'll need is:
+setwd("src")
+
+# First, edit src/SetUp.R to make sure that the variables "datadir" and "pptinfo" point
+# to the folder containing the raw data files, and the participant info document, respectively.
+
+# Then to fit ROC curves to all the raw data, run the file src/FitAllData.R:
+source("FitAllData.R")
+# This goes through all files in the datadir folder, and fits them. It saves the results in a csv file
+# named something like RunAnalysisResults20210121T123638.csv in folder "output".
+# The timestamp means that you won't overwrite old results if you run the file again.
+# I did this because FitAllData takes a while to run.
+# But it also writes the results into a file called RunAnalysisResults_MostRecent.csv
+# which gets overwritten every time.
+
+# To match up the data files with participant information stored in the "pptinfo" file,
+# modify the file MatchUpWithPptData.R to ensure that the variable "fitfiles" points to the
+# fits file you want to use, whether
+# fitsfile = "../output/RunAnalysisResults_MostRecent.csv"
+# or a different fits file.
+
+# The "pptinfo" file also contains information on participants' time to completion.
+# MatchUpWithPptData.R also takes the opportunity to remove participants whose time to completion was too long or short.
+# This is done via the variable 'removeOutlyingPercent' which specifies the total
+# percentage to remove. For example, if removeOutlyingPercent=10, then the slowest
+# 5% and fastest 5% of participants will be removed from further analysis.
+
+
+source("MatchUpWithPptData.R")
+# This writes the results to output/results.csv
+# Note that this will be overwritten
+
+# Finally, to generate graphs, do
+rmarkdown::render(input = "PlotGraphs.Rmd",output_file="../output/Results.docx")
+

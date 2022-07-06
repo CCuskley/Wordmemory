@@ -1,0 +1,512 @@
+m = glm(AUROCnorm ~  OrderCondition, data = results_AllFreq, family = Gamma(link=log))
+summary(m)
+m$coefficients
+meanClumped = exp(m$coefficients[1]) # intercept term
+meanEven = exp(m$coefficients[1]+m$coefficients[2]) # intercept term + x=1
+#dispersion is 1/shape parameter of gamma
+shape = MASS::gamma.shape(m)$alpha
+shape
+rr=seq(min(results_AllFreq$AUROCnorm),max(results_AllFreq$AUROCnorm),length=100)
+fitEven = data.frame(rr)
+fitEven$pdf = dgamma(rr,shape=shape,scale = meanEven/shape)
+fitClumped = data.frame(rr)
+fitClumped$pdf = dgamma(rr,shape=shape,scale = meanClumped/shape)
+ggplot()+geom_freqpoly(data=results_ByFreq,aes(x=AUROCnorm,y=..density..,color=WordFreq),bins=30)+
+geom_line(data=fitClumped,aes(x=rr,y=pdf),color="red")+
+geom_line(data=fitEven,aes(x=rr,y=pdf),color="blue") +
+geom_vline(xintercept=meanEven,color="red" ) + geom_vline(xintercept=meanClumped,color="blue" )
+ggplot()+geom_freqpoly(data=results_AllFreq,aes(x=AUROCnorm,y=..density..,color=OrderCondition),bins=50)+
+geom_line(data=fitClumped,aes(x=rr,y=pdf),color="red")+
+geom_line(data=fitEven,aes(x=rr,y=pdf),color="blue") +
+geom_vline(xintercept=meanEven,color="red" ) + geom_vline(xintercept=meanClumped,color="blue" )
+ggplot()+geom_freqpoly(data=results_AllFreq,aes(x=AUROCnorm,y=..density..,color=OrderCondition),bins=20)+
+geom_line(data=fitClumped,aes(x=rr,y=pdf),color="red")+
+geom_line(data=fitEven,aes(x=rr,y=pdf),color="blue") +
+geom_vline(xintercept=meanEven,color="red" ) + geom_vline(xintercept=meanClumped,color="blue" )
+m = glmer(AUROC ~ WordFreq  + (1|ParticipantIdentifier), data = results_ByFreq, family = Gamma(link=log))
+s=summary(m)
+s
+m = glmer(AUROCnorm ~ WordFreq  + (1|ParticipantIdentifier), data = results_ByFreq, family = Gamma(link=log))
+s=summary(m)
+s
+1/0.618^2
+s=summary(m)
+c=s$coefficients
+meanHi = exp(c["(Intercept)","Estimate"])# intercept term
+meanLo = exp(c["(Intercept)","Estimate"]+c["WordFreqLoFreq","Estimate"])# intercept term
+#dispersion is 1/shape parameter of gamma
+shape =2.618# MASS::gamma.shape doesn't work on glmMerMod objects but I think this is it -1/sigma^2 where sigma is the std dev of residuals
+rr=seq(min(results_ByFreq$AUROCnorm),max(results_ByFreq$AUROCnorm),length=100)
+fitHi = data.frame(rr)
+fitHi$pdf = dgamma(rr,shape=shape,scale = meanHi/shape)
+fitLo = data.frame(rr)
+fitLo$pdf = dgamma(rr,shape=shape,scale = meanLo/shape)
+ggplot()+geom_freqpoly(data=results_ByFreq,aes(x=AUROCnorm,y=..density..,color=WordFreq),bins=30)+
+geom_line(data=fitHi,aes(x=rr,y=pdf),color="red")+
+geom_line(data=fitLo,aes(x=rr,y=pdf),color="blue") +
+geom_vline(xintercept=meanHi,color="red" ) + geom_vline(xintercept=meanLo,color="blue" )
+ggplot()+geom_freqpoly(data=results_AllFreq,aes(x=AUROC,y=..density..,color=OrderCondition),bins=30)
+m = lme4::glmer(AUROCnorm ~ WordFreq+ OrderCondition +StartCondition + (1|ParticipantIdentifier), data = results_ByFreq, family = Gamma(link = log))
+print(summary(m))
+m = lme4::glmer(AUROCnorm ~ WordFreq+ OrderCondition  + (1|ParticipantIdentifier), data = results_ByFreq, family = Gamma(link = log))
+summary(m)
+m = lmerTest::lmer(AUROC ~ WordFreq+ OrderCondition  + (1|ParticipantIdentifier), data = results_ByFreq)
+print(summary(m))
+m = glm(AUROCnorm ~ OrderCondition, data = results_AllFreq, family = Gamma(link=log))
+summary(m)
+m = glm(AUROCnorm ~ OrderCondition, data = results_AllFreq, family = Gamma(link=log))
+summary(m)
+m = lm(AUROC ~ OrderCondition, data = results_AllFreq)
+summary(m)
+m = glm(dprime ~ WordFreq   ,  data = results_ByFreq, family = Gamma(link=log))
+print(summary(m))
+m = lme4::glmer(dprime ~ WordFreq   + (1|ParticipantIdentifier),  data = results_ByFreq, family = Gamma(link=log))
+print(summary(m))
+m = glm(dprime ~ WordFreq + OrderCondition  ,  data = results_ByFreq, family = Gamma(link=log))
+print(summary(m))
+m = lmerTest::lmer(log(R) ~ WordFreq + OrderCondition  + (1|ParticipantIdentifier),  data = results_ByFreq)
+summary(m)
+m = lmerTest::lmer(log(R) ~ WordFreq + OrderCondition  + (1|ParticipantIdentifier),  data = results_ByFreq)
+s=summary(m)
+s
+c = s$coefficients
+c
+mHiClumped = c["(Intercept)","Estimate"]
+mLoClumped = mHiClumped + c["WordFreqLoFreq","Estimate"]
+mHiEven = mHiClumped + c["OrderConditionEven","Estimate"]
+mLoEven = mLoClumped + c["OrderConditionEven","Estimate"]
+ggplot() + geom_freqpoly(data=results_ByFreq,aes(x=log(R),y=..density..,color=WordFreq),bins=30) +
+geom_vline(xintercept=m1,color="red" ) + geom_vline(xintercept=m2,color="blue" )
+mean(log(results_ByFreq$R[results_ByFreq$WordFreq==Lo & results_ByFreq$OrderCondition=="even"])
+)
+mean(log(results_ByFreq$R[results_ByFreq$WordFreq=="LowFreq" & results_ByFreq$OrderCondition=="even"]))
+mean(log(results_ByFreq$R[results_ByFreq$WordFreq=="LoFreq" & results_ByFreq$OrderCondition=="even"]))
+unique(results_ByFreq$WordFreq)
+unique(results_ByFreq$OrderCondition)
+mean(log(results_ByFreq$R[results_ByFreq$WordFreq=="LoFreq" & results_ByFreq$OrderCondition=="Even"]))
+mLoEven
+mHiEven
+mean(log(results_ByFreq$R[results_ByFreq$WordFreq=="HiFreq" & results_ByFreq$OrderCondition=="Even"]))
+mean(log(results_ByFreq$R[results_ByFreq$WordFreq=="HiFreq" & results_ByFreq$OrderCondition=="Clumped"]))
+mHiClumped
+ggplot() + geom_freqpoly(data=results_ByFreq,aes(x=log(R),y=..density..,color=WordFreq),bins=30) +
+geom_vline(xintercept=mHiClumped,color="red" ) + geom_vline(xintercept=mLoClumped,color="blue" )
+geom_vline(xintercept=mHiEven,color="red",linetype = "longdash" ) + geom_vline(xintercept=mLoEven,color="blue" ,linetype = "longdash")
+ggplot() + geom_freqpoly(data=results_ByFreq,aes(x=log(R),y=..density..,color=WordFreq),bins=30) +
+geom_vline(xintercept=mHiClumped,color="red" ) + geom_vline(xintercept=mLoClumped,color="blue" ) +
+geom_vline(xintercept=mHiEven,color="red",linetype = "longdash" ) + geom_vline(xintercept=mLoEven,color="blue" ,linetype = "longdash")
+ggplot()+geom_freqpoly(aes(x=s$residuals),bins=30)
+m
+m = lmerTest::lmer(log(R) ~ WordFreq + OrderCondition  + (1|ParticipantIdentifier),  data = results_ByFreq)
+s=summary(m)
+s
+sigma = 1.293
+xx=seq(min(log(results_AllFreq$R)),max(log(results_AllFreq$R)),length=100)
+fitHi = data.frame(xx)
+sigma = 1.293 # don't know how to read this off the fitted model but I've taken it from the SD of residuals.
+xx=seq(min(log(results_AllFreq$R)),max(log(results_AllFreq$R)),length=100)
+fitHi = data.frame(xx)
+fitHi$pdf = dnormal(xx,alpha=mHiClumped,sigma=sigma)
+fitHi$pdf = dnorm(xx,mean=mHiClumped,sd=sigma)
+xx=seq(min(log(results_AllFreq$R)),max(log(results_AllFreq$R)),length=100)
+fitHi = data.frame(xx)
+fitHi$pdf = dnorm(xx,mean=mHiClumped,sd=sigma)
+ggplot() + geom_freqpoly(data=results_ByFreq,aes(x=log(R),y=..density..,color=WordFreq),bins=30) +
+geom_vline(xintercept=mHiClumped,color="red" ) + geom_vline(xintercept=mLoClumped,color="blue" ) +
+geom_vline(xintercept=mHiEven,color="red",linetype = "longdash" ) + geom_vline(xintercept=mLoEven,color="blue" ,linetype = "longdash") +
+geom_line(data=fitHi,aes(x=xx,y=pdf),color="red")
+fitLo = data.frame(xx)
+fitLo$pdf = dnorm(xx,mean=mLoClumped,sd=sigma)
+ggplot() + geom_freqpoly(data=results_ByFreq,aes(x=log(R),y=..density..,color=WordFreq),bins=30) +
+geom_vline(xintercept=mHiClumped,color="red" ) + geom_vline(xintercept=mLoClumped,color="blue" ) +
+geom_vline(xintercept=mHiEven,color="red",linetype = "longdash" ) + geom_vline(xintercept=mLoEven,color="blue" ,linetype = "longdash") +
+geom_line(data=fitHi,aes(x=xx,y=pdf),color="red") +
+geom_line(data=fitLo,aes(x=xx,y=pdf),color="blue")
+m = lmerTest::lmer(log(R) ~ WordFreq  + (1|ParticipantIdentifier),  data = results_ByFreq)
+s=summary(m)
+s
+c
+m = lmerTest::lmer(log(R) ~ WordFreq  + (1|ParticipantIdentifier),  data = results_ByFreq)
+s=summary(m)
+c = s$coefficients
+c
+ggplot() + geom_freqpoly(data=results_ByFreq,aes(x=log(R),y=..density..,color=WordFreq),bins=30) +
+geom_line(data=fitHi,aes(x=xx,y=pdf),color="red") +
+geom_line(data=fitLo,aes(x=xx,y=pdf),color="blue")
+m = glmer(R ~ WordFreq  + (1|ParticipantIdentifier), data = results_ByFreq, family = Gamma(link=log))
+summary(m)
+s=summary(m)
+c=s$coefficients
+c
+c["(Intercept)","Estimate"]
+shape = MASS::gamma.shape(m)$alpha
+sigma = 0.8826  # SD of residuals
+shape = 1/sigma^2
+sigma
+shape
+m = glmer(R ~ WordFreq  + (1|ParticipantIdentifier), data = results_ByFreq, family = Gamma(link=log))
+s=summary(m)
+c=s$coefficients
+meanHi = exp(c["(Intercept)","Estimate"]) # intercept term
+meanLo = exp(c["(Intercept)","Estimate"]+c["WordFreqLoFreq","Estimate"]) # intercept term + x=1
+#dispersion is 1/shape parameter of gamma
+sigma = 0.8826  # SD of residuals
+shape = 1/sigma^2
+rr=seq(0.0001,max(results_ByFreq$R),length=100)
+fitHi = data.frame(rr)
+fitHi$pdf = dgamma(rr,shape=shape,scale = meanHi/shape)
+fitLo = data.frame(rr)
+fitLo$pdf = dgamma(rr,shape=shape,scale = meanLo/shape)
+ggplot()+geom_freqpoly(data=results_ByFreq,aes(x=R,y=..density..,color=WordFreq),bins=30)+
+geom_line(data=fitClumped,aes(x=rr,y=pdf),color="red")+
+geom_line(data=fitEven,aes(x=rr,y=pdf),color="blue") +
+geom_vline(xintercept=meanEven,color="red" ) + geom_vline(xintercept=meanClumped,color="blue" )
+m = lmerTest::lmer(log(R) ~ WordFreq  + (1|ParticipantIdentifier),  data = results_ByFreq)
+s=summary(m)
+c = s$coefficients
+sigma = 1.293 # don't know how to read this off the fitted model but I've taken it from the SD of residuals.
+mHi = c["(Intercept)","Estimate"]
+mLo = mHi + c["WordFreqLoFreq","Estimate"]
+xx=seq(min(log(results_AllFreq$R)),max(log(results_AllFreq$R)),length=100)
+fitHi = data.frame(xx)
+fitHi$pdf = dnorm(xx,mean=mHi,sd=sigma)
+fitLo = data.frame(xx)
+fitLo$pdf = dnorm(xx,mean=mLo,sd=sigma)
+ggplot() + geom_freqpoly(data=results_ByFreq,aes(x=log(R),y=..density..,color=WordFreq),bins=30) +
+geom_vline(xintercept=meanEven,color="red" ) + geom_vline(xintercept=meanClumped,color="blue" ) + geom_line(data=fitHi,aes(x=xx,y=pdf),color="red") +
+geom_line(data=fitLo,aes(x=xx,y=pdf),color="blue")
+m = lmerTest::lmer(log(R) ~ WordFreq  + (1|ParticipantIdentifier),  data = results_ByFreq)
+s=summary(m)
+c = s$coefficients
+sigma = 1.293 # don't know how to read this off the fitted model but I've taken it from the SD of residuals.
+mHi = c["(Intercept)","Estimate"]
+mLo = mHi + c["WordFreqLoFreq","Estimate"]
+xx=seq(min(log(results_AllFreq$R)),max(log(results_AllFreq$R)),length=100)
+fitHi = data.frame(xx)
+fitHi$pdf = dnorm(xx,mean=mHi,sd=sigma)
+fitLo = data.frame(xx)
+fitLo$pdf = dnorm(xx,mean=mLo,sd=sigma)
+ggplot() + geom_freqpoly(data=results_ByFreq,aes(x=log(R),y=..density..,color=WordFreq),bins=30) +
+geom_vline(xintercept=mHi,color="red" ) + geom_vline(xintercept=mLo,color="blue" ) + geom_line(data=fitHi,aes(x=xx,y=pdf),color="red") +
+geom_line(data=fitLo,aes(x=xx,y=pdf),color="blue")
+mHi
+mLo
+m = glmer(R ~ WordFreq  + (1|ParticipantIdentifier), data = results_ByFreq, family = Gamma(link=log))
+s=summary(m)
+c=s$coefficients
+meanHi = exp(c["(Intercept)","Estimate"]) # intercept term
+meanLo = exp(c["(Intercept)","Estimate"]+c["WordFreqLoFreq","Estimate"]) # intercept term + x=1
+#dispersion is 1/shape parameter of gamma
+sigma = 0.8826  # SD of residuals
+shape = 1/sigma^2
+rr=seq(0.0001,max(results_ByFreq$R),length=100)
+fitHi = data.frame(rr)
+fitHi$pdf = dgamma(rr,shape=shape,scale = meanHi/shape)
+fitLo = data.frame(rr)
+fitLo$pdf = dgamma(rr,shape=shape,scale = meanLo/shape)
+ggplot()+geom_freqpoly(data=results_ByFreq,aes(x=R,y=..density..,color=WordFreq),bins=30)+
+geom_line(data=fitClumped,aes(x=rr,y=pdf),color="red")+
+geom_line(data=fitEven,aes(x=rr,y=pdf),color="blue") +
+geom_vline(xintercept=meanHi,color="red" ) + geom_vline(xintercept=meanLo,color="blue" )
+meanHi
+exp(meanHi)
+mHi
+exp(mHi)
+meanHi
+meanLo
+exp(mLo)
+ggplot()+geom_freqpoly(aes(x=s$residuals),bins=30)
+m = glmer(R ~ WordFreq  + (1|ParticipantIdentifier), data = results_ByFreq, family = Gamma(link=log))
+s=summary(m)
+s
+sigma = 0.8826  # SD of residuals
+shape = 1/sigma^2
+shape
+shape=0.5
+rr=seq(0.0001,max(results_ByFreq$R),length=100)
+fitHi = data.frame(rr)
+fitHi$pdf = dgamma(rr,shape=shape,scale = meanHi/shape)
+fitLo = data.frame(rr)
+fitLo$pdf = dgamma(rr,shape=shape,scale = meanLo/shape)
+ggplot()+geom_freqpoly(data=results_ByFreq,aes(x=R,y=..density..,color=WordFreq),bins=30)+
+geom_line(data=fitClumped,aes(x=rr,y=pdf),color="red")+
+geom_line(data=fitEven,aes(x=rr,y=pdf),color="blue") +
+geom_vline(xintercept=meanHi,color="red" ) + geom_vline(xintercept=meanLo,color="blue" )
+shape=0.2
+rr=seq(0.0001,max(results_ByFreq$R),length=100)
+fitHi = data.frame(rr)
+fitHi$pdf = dgamma(rr,shape=shape,scale = meanHi/shape)
+fitLo = data.frame(rr)
+fitLo$pdf = dgamma(rr,shape=shape,scale = meanLo/shape)
+ggplot()+geom_freqpoly(data=results_ByFreq,aes(x=R,y=..density..,color=WordFreq),bins=30)+
+geom_line(data=fitClumped,aes(x=rr,y=pdf),color="red")+
+geom_line(data=fitEven,aes(x=rr,y=pdf),color="blue") +
+geom_vline(xintercept=meanHi,color="red" ) + geom_vline(xintercept=meanLo,color="blue" )
+shape=1
+rr=seq(0.0001,max(results_ByFreq$R),length=100)
+fitHi = data.frame(rr)
+fitHi$pdf = dgamma(rr,shape=shape,scale = meanHi/shape)
+fitLo = data.frame(rr)
+fitLo$pdf = dgamma(rr,shape=shape,scale = meanLo/shape)
+ggplot()+geom_freqpoly(data=results_ByFreq,aes(x=R,y=..density..,color=WordFreq),bins=30)+
+geom_line(data=fitClumped,aes(x=rr,y=pdf),color="red")+
+geom_line(data=fitEven,aes(x=rr,y=pdf),color="blue") +
+geom_vline(xintercept=meanHi,color="red" ) + geom_vline(xintercept=meanLo,color="blue" )
+shape=2
+```{r , echo=FALSE, warning=FALSE, results=FALSE}
+ggplot()+geom_freqpoly(aes(x=s$residuals),bins=30)
+```
+rr=seq(0.0001,max(results_ByFreq$R),length=100)
+fitHi = data.frame(rr)
+fitHi$pdf = dgamma(rr,shape=shape,scale = meanHi/shape)
+fitLo = data.frame(rr)
+fitLo$pdf = dgamma(rr,shape=shape,scale = meanLo/shape)
+ggplot()+geom_freqpoly(data=results_ByFreq,aes(x=R,y=..density..,color=WordFreq),bins=30)+
+geom_line(data=fitClumped,aes(x=rr,y=pdf),color="red")+
+geom_line(data=fitEven,aes(x=rr,y=pdf),color="blue") +
+geom_vline(xintercept=meanHi,color="red" ) + geom_vline(xintercept=meanLo,color="blue" )
+#dispersion is 1/shape parameter of gamma
+sigma = 0.8826  # SD of residuals
+shape = 1/sigma^2
+rr=seq(0.0001,max(results_ByFreq$R),length=100)
+fitHi = data.frame(rr)
+fitHi$pdf = dgamma(rr,shape=shape,scale = meanHi/shape)
+fitLo = data.frame(rr)
+fitLo$pdf = dgamma(rr,shape=shape,scale = meanLo/shape)
+ggplot()+geom_freqpoly(data=results_ByFreq,aes(x=R,y=..density..,color=WordFreq),bins=30)+
+geom_line(data=fitHi,aes(x=rr,y=pdf),color="red")+
+geom_line(data=fitLo,aes(x=rr,y=pdf),color="blue") +
+geom_vline(xintercept=meanHi,color="red" ) + geom_vline(xintercept=meanLo,color="blue" )
+ggplot()+geom_freqpoly(data=results_ByFreq,aes(x=R,y=..density..,color=WordFreq),bins=50)+
+geom_line(data=fitHi,aes(x=rr,y=pdf),color="red")+
+geom_line(data=fitLo,aes(x=rr,y=pdf),color="blue") +
+geom_vline(xintercept=meanHi,color="red" ) + geom_vline(xintercept=meanLo,color="blue" )
+AIC(m)
+m = lmerTest::lmer(log(R) ~ WordFreq  + (1|ParticipantIdentifier),  data = results_ByFreq)
+AIC(m)
+m = glm(R ~ OrderCondition, data = results_AllFreq, family = Gamma(link=log))
+meanClumped = exp(m$coefficients[1]) # intercept term
+meanEven = exp(m$coefficients[1]+m$coefficients[2]) # intercept term + x=1
+#dispersion is 1/shape parameter of gamma
+shape = MASS::gamma.shape(m)$alpha
+rr=seq(0.0001,max(results_AllFreq$R),length=100)
+fitEven = data.frame(rr)
+fitEven$pdf = dgamma(rr,shape=shape,scale = meanEven/shape)
+fitClumped = data.frame(rr)
+fitClumped$pdf = dgamma(rr,shape=shape,scale = meanClumped/shape)
+ggplot()+geom_freqpoly(data=results_ByFreq,aes(x=R,y=..density..,color=WordFreq),bins=30)+
+geom_line(data=fitClumped,aes(x=rr,y=pdf),color="red")+
+geom_line(data=fitEven,aes(x=rr,y=pdf),color="blue") +
+geom_vline(xintercept=meanEven,color="red" ) + geom_vline(xintercept=meanClumped,color="blue" )
+rr=seq(cutoff,max(results_AllFreq$R),length=100)
+fitEven = data.frame(rr)
+fitEven$pdf = dgamma(rr,shape=shape,scale = meanEven/shape)
+fitClumped = data.frame(rr)
+fitClumped$pdf = dgamma(rr,shape=shape,scale = meanClumped/shape)
+ggplot()+geom_freqpoly(data=results_ByFreq,aes(x=R,y=..density..,color=WordFreq),bins=50)+
+geom_line(data=fitClumped,aes(x=rr,y=pdf),color="red")+
+geom_line(data=fitEven,aes(x=rr,y=pdf),color="blue") +
+geom_vline(xintercept=meanEven,color="red" ) + geom_vline(xintercept=meanClumped,color="blue" )
+ggplot()+geom_freqpoly(data=results_ByFreq,aes(x=R,y=..density..,color=WordFreq),bins=20)+
+geom_line(data=fitClumped,aes(x=rr,y=pdf),color="red")+
+geom_line(data=fitEven,aes(x=rr,y=pdf),color="blue") +
+geom_vline(xintercept=meanEven,color="red" ) + geom_vline(xintercept=meanClumped,color="blue" )
+m = glmer(R ~ WordFreq  + (1|ParticipantIdentifier), data = results_ByFreq, family = Gamma(link=log))
+s=summary(m)
+c=s$coefficients
+meanHi = exp(c["(Intercept)","Estimate"]) # intercept term
+meanLo = exp(c["(Intercept)","Estimate"]+c["WordFreqLoFreq","Estimate"]) # intercept term + x=1
+#dispersion is 1/shape parameter of gamma
+sigma = 0.8826  # SD of residuals
+shape = 1/sigma^2
+rr=seq(cutoff,max(results_ByFreq$R),length=100)
+fitHi = data.frame(rr)
+fitHi$pdf = dgamma(rr,shape=shape,scale = meanHi/shape)
+fitLo = data.frame(rr)
+fitLo$pdf = dgamma(rr,shape=shape,scale = meanLo/shape)
+ggplot()+geom_freqpoly(data=results_ByFreq,aes(x=R,y=..density..,color=WordFreq),bins=20)+
+geom_line(data=fitHi,aes(x=rr,y=pdf),color="red")+
+geom_line(data=fitLo,aes(x=rr,y=pdf),color="blue") +
+geom_vline(xintercept=meanHi,color="red" ) + geom_vline(xintercept=meanLo,color="blue" )
+ggplot(data=results_AllFreq,aes(x=OrderCondition,y=AUROC,color=StartCondition))+ geom_boxplot(outlier.shape=NA)+ geom_quasirandom()
+ggplot(data=results_AllFreq,aes(x=OrderCondition,y=AUROC))+ geom_boxplot(outlier.shape=NA)+ geom_quasirandom(aes(color=StartCondition) )
+ggplot(data=results_AllFreq,aes(x=OrderCondition,y=AUROC))+ geom_boxplot(outlier.shape=NA)+ geom_quasirandom()
+ggplot(data=results_AllFreq,aes(x=OrderCondition,y=R))+ geom_boxplot(outlier.shape=NA)+ geom_quasirandom()
+library(ggplot2)
+library(ggbeeswarm)
+library(lme4)
+library(tidyr)
+library(lmerTest)
+theme_set(theme_classic())
+results = read.csv("../output/results.csv")
+# For some plots, we will want data in wider format
+tmp = results[,c("ParticipantIdentifier","AUROCnofit","AUROC","R","dprime","WordFreq","OrderCondition")]
+freqresults = pivot_wider(tmp,names_from="WordFreq",values_from=c("AUROCnofit","AUROC","R","dprime"))
+# Some initial processing. First of all, logs can't cope with 0s so replace these:
+cutoff = 1e-2
+results$dprime[results$dprime<cutoff] = cutoff
+results$R[results$R<cutoff] = cutoff
+# Make a normalised AUROC
+results$AUROCnorm = 2*(results$AUROC-0.5)
+results$AUROCnorm[results$AUROCnorm<0]=0.1
+# Our fitted AUROC should of course already be positive, but it ends up being -6.3342e-05 for some fits,
+# I'm assuming due to rounding error etc.
+# We will also be fitting separately for fits done using all data vs using subsets
+results_AllFreq = results[results$WordFreq=="AllFreq",]
+results_ByFreq = results[results$WordFreq!="AllFreq",]
+setwd("src")
+results = read.csv("../output/results.csv")
+# For some plots, we will want data in wider format
+tmp = results[,c("ParticipantIdentifier","AUROCnofit","AUROC","R","dprime","WordFreq","OrderCondition")]
+freqresults = pivot_wider(tmp,names_from="WordFreq",values_from=c("AUROCnofit","AUROC","R","dprime"))
+# Some initial processing. First of all, logs can't cope with 0s so replace these:
+cutoff = 1e-2
+results$dprime[results$dprime<cutoff] = cutoff
+results$R[results$R<cutoff] = cutoff
+# Make a normalised AUROC
+results$AUROCnorm = 2*(results$AUROC-0.5)
+results$AUROCnorm[results$AUROCnorm<0]=0.1
+# Our fitted AUROC should of course already be positive, but it ends up being -6.3342e-05 for some fits,
+# I'm assuming due to rounding error etc.
+# We will also be fitting separately for fits done using all data vs using subsets
+results_AllFreq = results[results$WordFreq=="AllFreq",]
+results_ByFreq = results[results$WordFreq!="AllFreq",]
+m = lme4::glmer(dprime ~ WordFreq   + (1|ParticipantIdentifier),  data = results_ByFreq, family = Gamma(link=log))
+m = lme4::glmer(dprime ~ WordFreq   + (1|ParticipantIdentifier),  data = results_ByFreq, family = Gamma())
+m = glmer(R ~ WordFreq  + (1|ParticipantIdentifier), data = results_ByFreq, family = Gamma(link=log))
+s=summary(m)
+c=s$coefficients
+meanHi = exp(c["(Intercept)","Estimate"]) # intercept term
+meanLo = exp(c["(Intercept)","Estimate"]+c["WordFreqLoFreq","Estimate"]) # intercept term + x=1
+#dispersion is 1/shape parameter of gamma
+sigma = 0.8826  # SD of residuals
+shape = 1/sigma^2
+rr=seq(cutoff,max(results_ByFreq$R),length=100)
+fitHi = data.frame(rr)
+fitHi$pdf = dgamma(rr,shape=shape,scale = meanHi/shape)
+fitLo = data.frame(rr)
+fitLo$pdf = dgamma(rr,shape=shape,scale = meanLo/shape)
+ggplot()+geom_freqpoly(data=results_ByFreq,aes(x=R,y=..density..,color=WordFreq),bins=20)+
+geom_line(data=fitHi,aes(x=rr,y=pdf),color="red")+
+geom_line(data=fitLo,aes(x=rr,y=pdf),color="blue") +
+geom_vline(xintercept=meanHi,color="red" ) + geom_vline(xintercept=meanLo,color="blue" )
+s$residuals[1:10]
+results_ByFreq[1:10,results$WordFreq=="LowFreq"]
+which(results$WordFreq=="LowFreq")
+which(results$WordFreq=="LoFreq")
+length(s$residuals)
+jlo=which(results$WordFreq=="LoFreq")
+jlo=which(results_ByFreq$WordFreq=="LoFreq")
+jlo
+meanLo-results_ByFreq$R[jlo[1:10]]
+s$residuals[jlo[1:10]]
+log(meanLo)-log(results_ByFreq$R[jlo[1:10]])
+std(s$residuals)
+sd(s$residuals)
+s
+m = glm(R ~ OrderCondition, data = results_AllFreq, family = Gamma(link=log))
+meanClumped = exp(m$coefficients[1]) # intercept term
+meanEven = exp(m$coefficients[1]+m$coefficients[2]) # intercept term + x=1
+#dispersion is 1/shape parameter of gamma
+shape = MASS::gamma.shape(m)$alpha
+rr=seq(cutoff,max(results_AllFreq$R),length=100)
+fitEven = data.frame(rr)
+fitEven$pdf = dgamma(rr,shape=shape,scale = meanEven/shape)
+fitClumped = data.frame(rr)
+fitClumped$pdf = dgamma(rr,shape=shape,scale = meanClumped/shape)
+ggplot()+geom_freqpoly(data=results_ByFreq,aes(x=R,y=..density..,color=WordFreq),bins=20)+
+geom_line(data=fitClumped,aes(x=rr,y=pdf),color="red")+
+geom_line(data=fitEven,aes(x=rr,y=pdf),color="blue") +
+geom_vline(xintercept=meanEven,color="red" ) + geom_vline(xintercept=meanClumped,color="blue" )
+summary(m)
+sd(m$residuals)
+sigmasd(m$residuals)
+sigma=sd(m$residuals)
+sigma^2
+sqrt(sigma)
+jEven=which(results_AllFreq$OrderCondition=="Even")
+EvenR=results_AllFreq$R[jEven]
+Evenres = m$residuals[jEven]
+EvenR-meanEven
+Evenres
+Evenres[1:10]
+EvenR[1:10]-meanEven
+exp(Evenres[1:10]+meanEven)
+EvenR[1:10]
+exp(Evenres[1:10]-meanEven)
+exp(-Evenres[1:10]+meanEven)
+exp(-Evenres[1:10]-meanEven)
+jlo[1:10]
+s$residuals[1:10]
+length(s$residuals)
+s$residuals[jlo[1:10]]
+Evenres = m$residuals[jEven]
+jEven
+Evenres[1:10]
+m$residuals[jEven[1:10]]
+EvenR=results_AllFreq$R[jEven]
+EvenR[2]
+results_AllFreq$R[5]
+meanEven
+EvenR[1:5]
+EvenRres[1:5]
+Evenres[1:5]
+m$residuals[5]
+EvenR[1:5]-meanEven
+Evenres[1:5]
+(EvenR[1:5]-meanEven)./Evenres[1:5]
+(EvenR[1:5]-meanEven)./Evenres[1:5])
+(EvenR[1:5]-meanEven)/Evenres[1:5]
+meanEven/shape
+log(meanEven/shape)
+exp(meanEven/shape)
+summary(m)
+shape = MASS::gamma.shape(m)$alpha
+shape
+shape=1/1.010104
+shape
+(EvenR[1:5]-meanEven)/Evenres[1:5]
+meanEven
+(EvenR[1:5]-meanEven)/(meanEven/shape)
+Evenres[1:5]
+(EvenR[1:5]-meanEven)/(meanEven)
+install.packages("knitr")
+install.packages("xfun")
+library(ggbeeswarm)
+library(ggplot2, lib.loc = "J:/R-Library/4.0.4")
+install.packages("crayon")
+library(ggplot2)
+install.packages("ggplot2")
+install.packages("ggbeeswarm")
+library(tidyr)
+install.packages("tidyr")
+install.packages("cpp11")
+install.packages("tidyr")
+install.packages("dplyr")
+install.packages("lme4")
+install.packages("lmerTest")
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(ggbeeswarm)
+library(lme4)
+library(tidyr)
+library(lmerTest)
+theme_set(theme_classic())
+results = read.csv("../output/results.csv")
+# For some plots, we will want data in wider format
+tmp = results[,c("ParticipantIdentifier","AUROCnofit","AUROC","R","dprime","WordFreq","OrderCondition")]
+freqresults = pivot_wider(tmp,names_from="WordFreq",values_from=c("AUROCnofit","AUROC","R","dprime"))
+# Some initial processing. First of all, logs can't cope with 0s so replace these:
+cutoff = 1e-2
+results$dprime[results$dprime<cutoff] = cutoff
+results$R[results$R<cutoff] = cutoff
+# Make a normalised AUROC
+results$AUROCnorm = 2*(results$AUROC-0.5)
+results$AUROCnorm[results$AUROCnorm<0]=0.1
+# Our fitted AUROC should of course already be positive, but it ends up being -6.3342e-05 for some fits,
+# I'm assuming due to rounding error etc.
+# We will also be fitting separately for fits done using all data vs using subsets
+results_AllFreq = results[results$WordFreq=="AllFreq",]
+results_ByFreq = results[results$WordFreq!="AllFreq",]
+install.packages("tibble")
+install.packages("ellipsis")

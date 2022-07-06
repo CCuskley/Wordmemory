@@ -1,0 +1,1 @@
+.libPaths('C:\\Rstudio')

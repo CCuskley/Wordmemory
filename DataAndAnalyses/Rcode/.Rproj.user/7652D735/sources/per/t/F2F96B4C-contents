@@ -1,0 +1,43 @@
+GetScaleTotals <- function(dataset) {
+
+    dataset$ECRR_Av <- (dataset$ECRR_Q1 + dataset$ECRR_Q2 + dataset$ECRR_Q3 + dataset$ECRR_Q4 +
+                             dataset$ECRR_Q5 + dataset$ECRR_Q6 + dataset$ECRR_Q7 + dataset$ECRR_Q8 + dataset$ReversedECRR_Q9 +
+                             dataset$ECRR_Q10 + dataset$ReversedECRR_Q11 + dataset$ECRR_Q12 + dataset$ECRR_Q13 + dataset$ECRR_Q14 +
+                             dataset$ECRR_Q15 + dataset$ECRR_Q16 + dataset$ECRR_Q17 + dataset$ECRR_Q18)/18
+
+
+dataset$ECRR_Anx <- (dataset$ECRR_Q19 + dataset$ECRR_Q20 + dataset$ECRR_Q21 + dataset$ECRR_Q22 +
+                          dataset$ECRR_Q23 + dataset$ECRR_Q24 + dataset$ECRR_Q25 + dataset$ECRR_Q26 + dataset$ECRR_Q27 +
+                          dataset$ECRR_Q28 + dataset$ECRR_Q29 + dataset$ECRR_Q30 + dataset$ECRR_Q31 + dataset$ECRR_Q32 +
+                          dataset$ECRR_Q33 + dataset$ECRR_Q34 + dataset$ECRR_Q35 + dataset$ECRR_Q36)/18
+
+
+imp$data$ECRR_Av <- (imp$data$ECRR_Q1 + imp$data$ECRR_Q2 + imp$data$ECRR_Q3 + imp$data$ECRR_Q4 +
+                         imp$data$ECRR_Q5 + imp$data$ECRR_Q6 + imp$data$ECRR_Q7 + imp$data$ECRR_Q8 + imp$data$ReversedECRR_Q9 +
+                         imp$data$ECRR_Q10 + imp$data$ReversedECRR_Q11 + imp$data$ECRR_Q12 + imp$data$ECRR_Q13 + imp$data$ECRR_Q14 +
+                         imp$data$ECRR_Q15 + imp$data$ECRR_Q16 + imp$data$ECRR_Q17 + imp$data$ECRR_Q18)/18
+
+imp$data$ECRR_Anx <- (imp$data$ECRR_Q19 + imp$data$ECRR_Q20 + imp$data$ECRR_Q21 + imp$data$ECRR_Q22 +
+                          imp$data$ECRR_Q23 + imp$data$ECRR_Q24 + imp$data$ECRR_Q25 + imp$data$ECRR_Q26 + imp$data$ECRR_Q27 +
+                          imp$data$ECRR_Q28 + imp$data$ECRR_Q29 + imp$data$ECRR_Q30 + imp$data$ECRR_Q31 + imp$data$ECRR_Q32 +
+                          imp$data$ECRR_Q33 + imp$data$ECRR_Q34 + imp$data$ECRR_Q35 + imp$data$ECRR_Q36)/18
+
+imp$data$PCS <- imp$data$PCS_Q1 + imp$data$PCS_Q2 + imp$data$PCS_Q3 + imp$data$PCS_Q4 +
+    imp$data$PCS_Q5 + imp$data$PCS_Q6 + imp$data$PCS_Q7 + imp$data$PCS_Q8 + imp$data$PCS_Q9 +
+    imp$data$PCS_Q10 + imp$data$PCS_Q11 + imp$data$PCS_Q12 + imp$data$PCS_Q13
+
+imp$data$PIPS <- imp$data$PIPS_Q1 +imp$data$PIPS_Q2 + imp$data$PIPS_Q4 + imp$data$PIPS_Q5 +
+    imp$data$PIPS_Q7 + imp$data$PIPS_Q8 + imp$data$PIPS_Q9 + imp$data$PIPS_Q11 + imp$data$PIPS_Q12 +
+    imp$data$PIPS_Q13 + imp$data$PIPS_Q14 + imp$data$PIPS_Q15
+
+imp$data$PDI <- imp$data$PDI_Q1_FamilyHome + imp$data$PDI_Q2_Recreation + imp$data$PDI_Q3_SocialActivity +
+    imp$data$PDI_Q4_Occupation + imp$data$PDI_Q5_Sex + imp$data$PDI_Q6_SelfCare + imp$data$PDI_Q7_Lifesupport
+
+imp$data$SSPQ <- imp$data$SSPQ_Q1 + imp$data$SSPQ_Q2 + imp$data$SSPQ_Q3 + imp$data$SSPQ_Q4 + imp$data$SSPQ_Q5 + imp$data$SSPQ_Q6
+
+imp$data$PHQ8 <- imp$data$PHQ8_Q1 + imp$data$PHQ8_Q2 + imp$data$PHQ8_Q3 + imp$data$PHQ8_Q4 + imp$data$PHQ8_Q5 +
+    imp$data$PHQ8_Q6 + imp$data$PHQ8_Q7 + imp$data$PHQ8_Q8
+
+
+return(dataset)
+}

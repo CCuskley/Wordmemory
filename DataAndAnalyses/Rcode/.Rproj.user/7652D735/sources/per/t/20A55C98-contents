@@ -1,0 +1,101 @@
+library(mice)
+library(miceadds)
+library(mitml)
+library(lavaan)
+library(haven)
+
+#Set working directory to folder containing the SPSS datafile
+setwd("C:\\Users\\njcar\\OneDrive - Newcastle University\\CB Data Analysis")
+
+#Read in the SPSS datafile
+#rawdata <- read_sav("No 999 General and student combined database 01.11.21.sav")
+#rawdata <- as_factor(rawdata)
+
+#Read in Excel file
+library(readxl)
+ClaireData_All_No999 <- read_excel("ClaireData_All_No999.xlsx", sheet = "Sheet1")
+rawdata <- as.data.frame(ClaireData_All_No999)
+str(rawdata)
+
+#Select just the variables for the imputation
+#This command displays the column names of 'rawdata' and we can identify the column numbers that we want to keep
+columns <- names(rawdata)
+columns
+
+#The columns I want are the ID column (number 1) and columns 35-116
+ForImp <- rawdata[,c(1,35:116)]
+
+#Check we have just the columns we need
+names(ForImp)
+
+#Explore the missingness
+#Identify percent missing data for each variable
+
+pMiss <- function(x){sum(is.na(x))/length(x)*100}
+
+#Missingness by column (variable)
+VarMiss <- apply(ForImp,2,pMiss)
+VarMiss
+max(VarMiss)
+
+#Missingness by participant (row)
+PptMiss <- apply(ForImp,1,pMiss)
+PptMiss
+max(PptMiss)
+
+#Include only participants with less than 40% missing data
+ForImp2 <- ForImp[which(PptMiss < 40),]
+
+#Recheck levels of missingness
+#Variables
+VarMiss2 <- apply(ForImp2,2,pMiss)
+VarMiss2
+max(VarMiss2)
+
+#Participants
+PptMiss2 <- apply(ForImp2,1,pMiss)
+PptMiss2
+max(PptMiss2)
+
+#Perform the multiple imputation
+ndatasets = 2
+imp <- mice(ForImp2, m = ndatasets, maxit = 2, meth = 'pmm', seed = 500)
+summary(imp)
+
+# Get datasets:
+alldatasets = list();
+for (j in 1:ndatasets)
+{
+    dataset = complete(imp,j)
+    dataset = GetScaleTotals(dataset)
+    alldatasets[[j]] = dataset
+}
+implist = alldatasets # is this what you need?
+# implist is a list of completed datasets, including totals
+# implist[[1]] is the first such dataset
+# implist[[2]] is the second, etc
+
+
+#### UP TO HERE ####
+
+#Create serial mediation model
+sermed=
+  "
+  PCS ~ a*ECR_AV
+  PIPS ~ b*PCS + ECR_AV
+  PDis ~ c*PIPS + PCS + d*ECR_AV
+
+  ie := a*b*c
+  de := d
+"
+
+# fit model
+mod2 <- with(implist, lavaan::sem(sermed), include.data = TRUE)
+
+# pool results
+res2 <- mitml::testEstimates(model = mod2)
+res2
+
+
+#Note: in the output RIV = Relative Increase in Variance (ratio of the sampling error due to missing data (and finite simulation) versus sample size)
+#Note: FMI = Fraction of Missing Information (number of imputations, k, should be at least 100 times the FMI statistic)

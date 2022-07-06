@@ -1,0 +1,72 @@
+FitMemoryParameters = function(ROCdata){
+    # ROC is a dataframe giving number of hits and false alarms as a function of the decision criterion
+    # This function fits R and dprime
+
+    # It returns
+    output = data.frame("AUROCnofit"=NA,"R"=NA,"Rmin"=NA,"Rmax"=NA,"dprime"=NA,"dmin"=NA,"dmax"=NA,"AUROC"=NA)
+
+    # First, get an estimate of AUROC from their overall judgements (ignoring  confidence), assuming R=0:
+    nofitdprime = erfinv(ROCdata$pHit[3])-erfinv(ROCdata$pFalseAlarm[3])
+    # Bound it at maximum to avoid numerical problems:
+    nofitdprime = min(maxdprime,nofitdprime)
+    output$AUROCnofit = AUROC(0,nofitdprime)
+
+    ###########################################
+    # Get initial guess
+    ###########################################
+    # Get an initial guess at R and dprime by assuming that the criterion is 0 at the  middle point
+    init_params = GetInitialGuess(ROCdata)
+
+    ###########################################
+    # Do the fitting
+    ###########################################
+    fit = optim(init_params,fn=LogLikelihood_ROCcurve,method="L-BFGS-B",hessian=FALSE,
+                ROCdata=ROCdata,control=list(fnscale=-1),lower=c(0,0),upper=c(maxR,maxdprime/2)) # last argument says to maximise
+
+
+    ###########################################
+    # Find confidence intervals
+    ###########################################
+    if (fit$convergence!=0)
+        print("Fit failed!")
+    # I get an abnormal termination for Civ8jdtyhrJeU0JcJ5m4_responses.xlsx, but it still seems
+    # to be a minimum. Matlab fits the same file without a problem. So I'll just print an alert
+    # but proceed
+
+
+    #  Write the values into the ROC data
+    ROCdata = FindBestCriteria(fit$par,ROCdata)
+    output$R = fit$par[1]
+    output$dprime = 2 * fit$par[2]
+    output$logL = sum(ROCdata$logLikelihood)
+    output$AUROC = AUROC(output$R,output$dprime)
+
+    #Now let's try and get confidence intervals
+    Lmin = fit$value - 1.92
+    # First, find the maximum possible dprime for which L>Lmin, as we change R:
+    find_maxdprime = FindOptimum( DprimeMax,ROCdata=ROCdata,Lmin=Lmin,maximum=TRUE,lower=0,upper=maxR )
+    output$dmax = find_maxdprime$objective
+    # And the minimum possible dprime for which L>Lmin, as we change R:
+    find_mindprime = FindOptimum( DprimeMin,ROCdata=ROCdata,Lmin=Lmin,maximum=FALSE,lower=0,upper=maxR )
+    output$dmin = find_mindprime$objective
+    # And similarly for R:
+    # Find the maximum possible R for which L>Lmin, as we change dprime:
+    find_maxR = FindOptimum( RMax,ROCdata=ROCdata,Lmin=Lmin,maximum=TRUE,lower=0,upper=maxdprime )
+    output$Rmax = find_maxR$objective
+    # Simialrly to find the min:
+    find_minR = FindOptimum( RMin,ROCdata=ROCdata,Lmin=Lmin,maximum=FALSE,lower=0,upper=maxdprime )
+    output$Rmin = find_minR$objective
+
+    # Sanity check: if min>max, then something has gone wrong with the confidence interval estimation.
+    # Replace values with NA to alert user;
+    if (output$dmin>output$dmax) {
+        output$dmin=NA
+        output$dmax=NA
+    }
+    if (output$Rmin>output$Rmax) {
+        output$Rmin=NA
+        output$Rmax=NA
+    }
+
+    return(output)
+}

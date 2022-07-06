@@ -1,0 +1,21 @@
+# LibrariesL
+library(stringr)
+library(pracma)
+library(readxl)
+library(tidyr)
+
+# Source all files in the "lib" directory
+libfiles = list.files("../lib",pattern="*.R",full.names=TRUE)
+for (file in libfiles)
+    source(file)
+
+datadir = "../data" # Where to find the data files:
+pptinfo = "../data/ParticipantInfo.csv" # Where to find the file giving details about participants
+wordinfo = "../data/WordProperties.csv" # Where to find the file giving details about the words used
+
+
+# NB increase these with caution - you can run into problems with NaNs if these are too large:
+maxdprime = 4
+maxR = 0.999
+maxC = 4
+

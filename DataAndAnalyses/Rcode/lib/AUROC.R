@@ -1,0 +1,12 @@
+AUROC = function(R,dprime) {
+# Area under ROC curve
+# I just get this by numerical integration, nowt fancy
+
+    # Range of decision criterion:
+    C = seq(from = maxC,to=-maxC, length.out=1e4)
+
+    pHit = R + (1-R) * pnorm( 0.5*dprime-C)
+    pFalseAlarm = 1 - pnorm( 0.5*dprime+C)
+    auc = trapz(pFalseAlarm,pHit)
+    return(auc)
+}

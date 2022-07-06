@@ -1,0 +1,540 @@
+---
+title: "Results"
+author: "Jenny C. A. Read"
+date: "21/01/2021"
+output:
+  word_document: default
+  html_document: default
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE, echo=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(ggbeeswarm)
+library(lme4)
+library(tidyr)
+library(dplyr)
+library(lmerTest)
+library(lmodel2)
+theme_set(theme_classic())
+
+results = read.csv("../output/results.csv")
+
+# For some plots, we will want data in wider format
+tmp = results[,c("ParticipantIdentifier","AUROCnofit","AUROC","R","dprime","WordFreq","OrderCondition")]
+freqresults = pivot_wider(tmp,names_from="WordFreq",values_from=c("AUROCnofit","AUROC","R","dprime"))
+
+# Some initial processing. First of all, logs can't cope with 0s so replace these:
+cutoff = 1e-2
+results$dprime[results$dprime<cutoff] = cutoff
+results$R[results$R<cutoff] = cutoff
+
+# Make a normalised AUROC
+results$AUROCnorm = 2*(results$AUROC-0.5)
+results$AUROCnorm[results$AUROCnorm<0]=0.1
+# Our fitted AUROC should of course already be positive, but it ends up being -6.3342e-05 for some fits,
+# I'm assuming due to rounding error etc.
+# We will also be fitting separately for fits done using all data vs using subsets
+results_AllFreq = results[results$WordFreq=="AllFreq",]
+results_ByFreq = results[results$WordFreq!="AllFreq",]
+
+```
+
+# Properties of this data-set
+```{r , echo=FALSE, warning=FALSE, results=FALSE}
+# Get unique participants
+ppts = as.data.frame(results %>% group_by(ParticipantIdentifier) %>% summarise(Age = mean(Age), NativeSpeaker = NativeSpeaker[1], Bilingual = Bilingual[1],Gender = Gender[1]))
+Age = ppts$Age
+nUnknownAge = sum(is.na(Age))
+Age = Age[!is.na(Age)]
+
+```
+
+This data-set contains results from `r length(unique(results$ParticipantIdentifier))` different participants. The age is not recorded in `r nUnknownAge`; in the others, the age range is `r min(Age)` to  `r max(Age)`, with a mean of `r  mean(Age)` and SD `r sd(Age)`.
+
+The time taken to complete the task ranges from `r min(results$TimeToCompletion)` to `r max(results$TimeToCompletion)` seconds.
+
+`r sum(ppts$Gender=="male")` participants are male and `r sum(ppts$Gender=="female")` are female.
+
+`r sum(ppts$NativeSpeaker==TRUE)` participants are native speakers and `r sum(ppts$NativeSpeaker==FALSE)` are not. `r sum(ppts$Bilingual==FALSE & ppts$NativeSpeaker==FALSE)` of the non-native speakers are non-bilingual.
+
+
+
+# Data exploration with graphs
+## Overall performance as measured by no-fit AUROC
+Given that the estimates of R and d' from the fit are very noisy (have wide confidence intervals), I thought it would be worth looking at a simpler estimate of overall performance. Here, I compute d' = erfinv(pHit) - erfinv(pFA), using the hit rate and false alarm rate based on the observer's classifications without using the confidence judgments at all, and compute the area under the AUROC with this d' and R=0. (If this d' came out as >4, I truncated it at 4 to avoid numerical problems.) This provides a simple measure of overall performance which does not depend on the fitting, although it does assume that the underlying familiarity signal comes from a Gaussian distribution and that there is no recollection. Since this no-fit AUROC is not constrained, it can be <0.5, representing performance that's worse than chance.
+
+Here we compare this no-fit AUROC to the AUROC obtained from the fit.The black line is the identity. As expected, the fit tends to give a higher AUROC, because the left-hand end of the ROC curve ends at Phit=R, not Phit=0. You can see the 0.5 floor on the y axis. 
+```{r , echo=FALSE, warning=FALSE, results=FALSE}
+ggplot(data=results_AllFreq,aes(x=AUROCnofit,y=AUROC))+ geom_point(aes(color=OrderCondition)) + geom_abline(intercept=0,slope=1,color="black")
+```
+
+There is 1 ppt with nofit-AUROC<0.4: g3hR3K9F4Bb28KbBMUPn. This person has pHit=0.64 and pFA=0.89, so indeed worse than chance. The two ppts over on the right both have pHit=1 which gives d'=1, even though pFA is also very high. Clearly, the fitted AUROC makes more sense for these ppts.
+
+I thought it would be interesting to check out the agreement between AUROCs estimate from overlapping subsets of the data.
+This plot shows no-fit AUROC for a given subject, using the high-freq words vs low-freq words. There is a lot of scatter but the correlations are highly significant in both cases. A Wilcoxon rank sum test finds a significant difference in no-fit AUROC between low- and high-frequency words.
+```{r , echo=FALSE, warning=FALSE, results=FALSE}
+# Do a Type II regression
+lm2 = lmodel2(formula = AUROCnofit_HiFreq ~ AUROCnofit_LoFreq, nperm = 99, data = filter(freqresults,OrderCondition=="Clumped"))
+slopeClumped = lm2$regression.results$Slope[lm2$regression.results$Method=="MA"]
+interceptClumped = lm2$regression.results$Intercept[lm2$regression.results$Method=="MA"]
+lm2 = lmodel2(formula = AUROCnofit_HiFreq ~ AUROCnofit_LoFreq, nperm = 99, data = filter(freqresults,OrderCondition=="Even"))
+slopeEven = lm2$regression.results$Slope[lm2$regression.results$Method=="MA"]
+interceptEven = lm2$regression.results$Intercept[lm2$regression.results$Method=="MA"]
+
+ggplot(data=freqresults,aes(x=AUROCnofit_LoFreq,y=AUROCnofit_HiFreq,color=OrderCondition))+ geom_point() + 
+    geom_abline(intercept=interceptEven,slope=slopeEven,color='blue') +
+    geom_abline(intercept=interceptClumped,slope=slopeClumped,color='red') +
+    geom_abline(intercept=0,slope=1,color="black")
+
+r = cor.test(freqresults$AUROCnofit_LoFreq,freqresults$AUROCnofit_HiFreq,method = "spearman")
+w= wilcox.test(freqresults$AUROCnofit_LoFreq,freqresults$AUROCnofit_HiFreq,paired=TRUE)
+
+```
+
+Now let's look at how this no-fit AUROC varies with word frequency and order condition.
+This plot shows no-fit AUROC, from the data using all words, plotted by order condition. There is a weak tendency for higher no-fit AUROC in the "even" condition.
+```{r , echo=FALSE, warning=FALSE, results=FALSE}
+ggplot(data=results_AllFreq,aes(x=OrderCondition,y=AUROCnofit))+ geom_boxplot(outlier.shape=NA)+ geom_quasirandom(aes(color=StartCondition) )
+```
+
+This plot shows no-fit AUROC obtained using only low- or high-freq words, again plotted by order condition. In both cases, the AUROC is slightly higher for low-frequency words.
+```{r , echo=FALSE, warning=FALSE, results=FALSE}
+ggplot(data=results_ByFreq,aes(x=OrderCondition,y=AUROCnofit,color=WordFreq))+ geom_boxplot(outlier.shape=NA)+ geom_quasirandom() 
+```
+
+## Overall performance as measured by fitted AUROC
+Reassuringly the same general conclusions hold when we look at the fitted AUROC.
+We first look at overall performance as measured by the area under the receiver operating characteristic curve (fitted using R and d'). Recall that our fitting procedure means that this cannot be below 0.5.
+This plot shows AUROC, fitted using all words, plotted by order condition. There is a weak tendency for higher AUROC in the "even" condition.
+```{r , echo=FALSE, warning=FALSE, results=FALSE}
+ggplot(data=results_AllFreq,aes(x=OrderCondition,y=AUROC))+ geom_boxplot(outlier.shape=NA)+ geom_quasirandom(aes(color=StartCondition) )
+```
+
+Here, we plot the same data but now draw separate box plots by start condition, to see if that makes a difference. It does not seem to.
+```{r , echo=FALSE, warning=FALSE, results=FALSE}
+ggplot(data=results_AllFreq,aes(x=OrderCondition,y=AUROC,color=StartCondition))+ geom_boxplot(outlier.shape=NA)+ geom_quasirandom() 
+```
+
+This plot shows AUROC fitted using only low- or high-freq words, again plotted by order condition. In both cases, AUROC is slightly higher for low-frequency words.
+```{r , echo=FALSE, warning=FALSE, results=FALSE}
+ggplot(data=results_ByFreq,aes(x=OrderCondition,y=AUROC,color=WordFreq))+ geom_boxplot(outlier.shape=NA)+ geom_quasirandom() 
+```
+
+This plot shows AUROC fitted for a given subject, using the high-freq words vs low-freq words. There is a lot of scatter but the correlations are highly significant in both cases. A Wilcoxon rank sum test finds a significant difference in AUROC between low- and high-frequency words.
+```{r , echo=FALSE, warning=FALSE, results=FALSE}
+ggplot(data=freqresults,aes(x=AUROC_LoFreq,y=AUROC_HiFreq,color=OrderCondition))+ geom_point() + geom_abline(intercept=0,slope=1,color="black")
+
+r = cor.test(freqresults$AUROC_LoFreq,freqresults$AUROC_HiFreq,method = "spearman")
+w= wilcox.test(freqresults$AUROC_LoFreq,freqresults$AUROC_HiFreq,paired=TRUE)
+```
+```{r }
+print(r)
+print(w)
+```
+
+
+
+## Familiarity parameter Dprime
+Now we do the same for dprime.
+
+This plot shows dprime, fitted using all words, with separate box plots for order condition. There does not seem to be any effect either of order or of start condition.
+```{r , echo=FALSE, warning=FALSE, results=FALSE}
+ggplot(data=results_AllFreq,aes(x=OrderCondition,y=dprime,color=StartCondition))+ geom_boxplot(outlier.shape=NA)+ geom_quasirandom() 
+```
+
+This plot shows dprime fitted using only low- or high-freq words, again plotted by order condition. There does not seem to be any significant effect of word frequency on dprime.
+```{r , echo=FALSE, warning=FALSE, results=FALSE}
+ggplot(data=results_ByFreq,aes(x=OrderCondition,y=dprime,color=WordFreq))+ geom_boxplot(outlier.shape=NA)+ geom_quasirandom() 
+```
+
+This plot shows dprime fitted for a given subject, using the high-freq words vs low-freq words. There is a lot of scatter but the correlations are highly significant in both cases. A Wilcoxon rank sum test finds no significant difference in  dprime between low- and high-frequency words.
+```{r , echo=FALSE, warning=FALSE, results=FALSE}
+ggplot(data=freqresults,aes(x=dprime_LoFreq,y=dprime_HiFreq,color=OrderCondition))+ geom_point() + geom_abline(intercept=0,slope=1,color="black")
+
+r = cor.test(freqresults$dprime_LoFreq,freqresults$dprime_HiFreq,method = "spearman")
+w= wilcox.test(freqresults$dprime_LoFreq,freqresults$dprime_HiFreq,paired=TRUE)
+```
+```{r }
+print(r)
+print(w)
+```
+
+
+## Recollection parameter R
+Now we do the same for R. This plot shows R, fitted using all words, plotted by order condition. There is a weak tendency for higher R in the "even" condition.
+```{r , echo=FALSE, warning=FALSE, results=FALSE}
+ggplot(data=results_AllFreq,aes(x=OrderCondition,y=R))+ geom_boxplot(outlier.shape=NA)+ geom_quasirandom(aes(color=StartCondition) )
+```
+
+Here, we plot the same data but now draw separate box plots for start condition, to see if that makes a difference. It does not seem to.
+```{r , echo=FALSE, warning=FALSE, results=FALSE}
+ggplot(data=results_AllFreq,aes(x=OrderCondition,y=R,color=StartCondition))+ geom_boxplot(outlier.shape=NA)+ geom_quasirandom() 
+
+ggplot(data=results_AllFreq,aes(x=OrderCondition,y=R,color=StartCondition))+ geom_violin()+ geom_quasirandom(dodge.width=0.8) 
+
+```
+
+This plot shows R fitted using only low- or high-freq words, again plotted by order condition. In both cases, R is convincingly higher for low-frequency words.
+```{r , echo=FALSE, warning=FALSE, results=FALSE}
+ggplot(data=results_ByFreq,aes(x=OrderCondition,y=R,color=WordFreq))+ geom_boxplot(outlier.shape=NA)+ geom_quasirandom() 
+
+```
+
+
+This plot shows R fitted for a given subject, using the high-freq words vs low-freq words. There is a lot of scatter but the correlation is highly significant. A Wilcoxon rank sum test finds a significant difference in R between low- and high-frequency words.
+
+```{r , echo=FALSE, warning=FALSE, results=FALSE}
+ggplot(data=freqresults,aes(x=R_LoFreq,y=R_HiFreq,color=OrderCondition))+ geom_point() + 
+   geom_abline(intercept=0,slope=1,color="black")
+
+r = cor.test(freqresults$R_LoFreq,freqresults$R_HiFreq,method = "spearman")
+w = wilcox.test(freqresults$R_LoFreq,freqresults$R_HiFreq,paired=TRUE)
+```
+```{r }
+print(r)
+print(w)
+```
+
+
+## Relationship between R and  d'
+This shows R vs d', for fits to all data.
+```{r correlation, echo=FALSE, warning=FALSE, results=FALSE}
+
+g = ggplot(data=results_AllFreq,aes(x=dprime,y=R,color=OrderCondition))+ geom_point() 
+print(g)
+#tiff(filename="..\\output\\Fig_Correlation.tif")
+#print(g)
+#dev.off()
+rp = cor.test(results$dprime,results$R,method = "pearson")
+rs = cor.test(results$dprime,results$R,method = "spearman")
+```
+
+There is a significant positive correlation between the $R$ and $d'$ parameters: 
+Pearson correlation: rho =`r formatC(signif(rp$estimate,digits=2))`, p=`r formatC(signif(rp$p.value,digits=2))`,
+Spearman correlation: rho =`r formatC(signif(rs$estimate,digits=2))`, p=`r formatC(signif(rs$p.value,digits=2))`.
+
+Note that in any individual fit there tends to be a tradeoff between $R$ and $d'$. So if people were identical and any differences were due to uncertainty in the fit, we would expect a negative correlation. The positive correlation indicates that people are different: those with good recollection also tend to have good $d'$. Note that the slope is the same for both groups, but the R is higher for the "even" group, as we have seen.
+
+
+# Statistical analysis
+
+
+
+## AUROC is significantly better for low-frequency words and for even distributions
+We explored fitting AUROC with a mixed-effect model, with two between-subjects factors (Order, even vs clumped, and Start, high vs low), and one within-subjects factor (word frequency during exposure phase, high vs low), with participant as a random factor.
+
+This is the overall distribution of the fitted AUROC.
+```{r , echo=FALSE, warning=FALSE, results=FALSE}
+ggplot()+geom_freqpoly(data=results_AllFreq,aes(x=AUROC,y=..density..,color=OrderCondition),bins=30)
+```
+
+AUROC is fairly Gaussian except for the peak at its lower bound of 0.5. To obtain something I could reasonably fit with a gamma distribution, I transformed AUROC into AUROCnorm = 2(AUROC-0.5). This is in the range (0-1) whereas our original fitted AUROC was in the range (0.5-1). Again, I replaced values < `r cutoff` (there were a few due to rounding error etc) with `r cutoff`.
+
+Fitting AUROCnorm with a gamma distribution, I found a highly significant effect of word frequency but no effect of order or start condition:
+
+```{r , echo=FALSE, warning=FALSE}
+m = lme4::glmer(AUROCnorm ~ WordFreq+ OrderCondition +StartCondition + (1|ParticipantIdentifier), data = results_ByFreq, family = Gamma(link = log))
+print(summary(m))
+m = lme4::glmer(AUROCnorm ~ WordFreq+ OrderCondition  + (1|ParticipantIdentifier), data = results_ByFreq, family = Gamma(link = log))
+print(summary(m))
+```
+
+I therefore made my canonical model be the one with only WordFreq as a factor; I'll call this mFreq. I ran an ANOVA comparing mFreq to m0, where m0 is the model with only the intercept (and the random effect of ppt ID, as before)
+
+```{r , echo=FALSE, warning=FALSE}
+m0 = lme4::glmer(AUROCnorm ~  (1|ParticipantIdentifier), data = results_ByFreq, family = Gamma(link = log))
+mFreq = lme4::glmer(AUROCnorm ~ WordFreq  + (1|ParticipantIdentifier), data = results_ByFreq, family = Gamma(link = log))
+print(anova(mFreq,m0))
+```
+
+
+Using a standard linear model, I found a highly significant effect of word frequency and a marginally significant effect of order but again no effect of start condition. 
+```{r , echo=FALSE, warning=FALSE}
+# Models I examined but do not print out:
+#m = lme4::glmer(AUROC ~ WordFreq  + (1|ParticipantIdentifier), data = results_ByFreq,family=Gamma(link="log"))
+
+#m = lmerTest::lmer(AUROC ~ WordFreq + OrderCondition  + StartCondition + (1|ParticipantIdentifier), data = results_ByFreq)
+
+#m = lmerTest::lmer(AUROC ~ WordFreq* OrderCondition  + (1|ParticipantIdentifier), data = results_ByFreq)
+
+# Best model which I am therefore printing out:
+m = lmerTest::lmer(AUROC ~ WordFreq+ OrderCondition  + (1|ParticipantIdentifier), data = results_ByFreq)
+print(summary(m))
+```
+
+We also examined the effect of order and start condition on the data fitted using all words (thus containing only between-subjects factors). This revealed a significant effect of order, with performance being higher for "even" than for "clumped". The results were the same whether I fitted with a gamma distribution or a Gaussian.
+
+```{r , echo=FALSE, warning=FALSE}
+# Started from this model with main effects  & interaction
+#m = lm(AUROC ~ OrderCondition*StartCondition, data = results_AllFreq)
+#drop1(m,test="Chisq")
+# used drop1 to drop terms not worth including; ended up with this:
+m = glm(AUROCnorm ~ OrderCondition, data = results_AllFreq, family = Gamma(link=log))
+print(summary(m))
+#m = lm(AUROC ~ OrderCondition, data = results_AllFreq)
+#
+```
+
+Overall, then, I think it's fair to conclude that AUROC is significantly better for low-frequency words and for even distributions.
+
+### Gamma-distribution fits for AUROC
+I thought it would be worth looking at what the model fit implies. Here it is for the fits to all data, where we found a significant effect of order. The frequency polygons show the distribution of fitted AUROC-norm for the two cases. The smooth curves show the fitted gamma distributions. The vertical lines mark the means of these. 
+```{r , echo=FALSE, warning=FALSE}
+m = glm(AUROCnorm ~  OrderCondition, data = results_AllFreq, family = Gamma(link=log))
+meanClumped = exp(m$coefficients[1]) # intercept term
+meanEven = exp(m$coefficients[1]+m$coefficients[2]) # intercept term + x=1
+#dispersion is 1/shape parameter of gamma
+shape = MASS::gamma.shape(m)$alpha
+
+rr=seq(min(results_AllFreq$AUROCnorm),max(results_AllFreq$AUROCnorm),length=100)
+fitEven = data.frame(rr)
+fitEven$pdf = dgamma(rr,shape=shape,scale = meanEven/shape)
+fitClumped = data.frame(rr)
+fitClumped$pdf = dgamma(rr,shape=shape,scale = meanClumped/shape)
+ggplot()+geom_freqpoly(data=results_AllFreq,aes(x=AUROCnorm,y=..density..,color=OrderCondition),bins=20)+
+  geom_line(data=fitClumped,aes(x=rr,y=pdf),color="red")+
+  geom_line(data=fitEven,aes(x=rr,y=pdf),color="blue") +
+  geom_vline(xintercept=meanEven,color="red" ) + geom_vline(xintercept=meanClumped,color="blue" ) 
+```
+
+
+Here is a similar plot for the fits separately to low and high frequency words, where we found a significant effect of frequency:
+```{r , echo=FALSE, warning=FALSE}
+m = glmer(AUROCnorm ~ WordFreq  + (1|ParticipantIdentifier), data = results_ByFreq, family = Gamma(link=log))
+s=summary(m)
+c=s$coefficients
+meanHi = exp(c["(Intercept)","Estimate"])# intercept term
+meanLo = exp(c["(Intercept)","Estimate"]+c["WordFreqLoFreq","Estimate"])# intercept term
+#dispersion is 1/shape parameter of gamma
+shape =2.618# MASS::gamma.shape doesn't work on glmMerMod objects but I think this is it -1/sigma^2 where sigma is the std dev of residuals
+
+rr=seq(min(results_ByFreq$AUROCnorm),max(results_ByFreq$AUROCnorm),length=100)
+fitHi = data.frame(rr)
+fitHi$pdf = dgamma(rr,shape=shape,scale = meanHi/shape)
+fitLo = data.frame(rr)
+fitLo$pdf = dgamma(rr,shape=shape,scale = meanLo/shape)
+ggplot()+geom_freqpoly(data=results_ByFreq,aes(x=AUROCnorm,y=..density..,color=WordFreq),bins=30)+
+  geom_line(data=fitHi,aes(x=rr,y=pdf),color="red")+
+  geom_line(data=fitLo,aes(x=rr,y=pdf),color="blue") +
+  geom_vline(xintercept=meanHi,color="red" ) + geom_vline(xintercept=meanLo,color="blue" ) 
+```
+
+I feel that these gamma fits are clearly better than a Gaussian would be, and this justifies the choice of this family.
+
+## d' shows no main effects but there’s an interaction between order and frequency.
+This plot shows the distribution of d'.
+```{r , echo=FALSE, warning=FALSE, results=FALSE}
+ggplot()+geom_freqpoly(data=results_AllFreq,aes(x=(dprime),y=..density..,color=OrderCondition),bins=30)
+```
+
+It is highly skewed and has a peak at its floor. It therefore seems sensible to fit it with a gamma distribution.
+
+I had difficulty getting this to converge, but it did so if I changed to the "optimx" optimizer.
+
+I find no main effect of word frequency, start condition or order condition , but I do find a significant interaction between word frequency and order condition:
+
+```{r , echo=FALSE, warning=FALSE}
+m = lme4::glmer(dprime ~ WordFreq*OrderCondition    + (1|ParticipantIdentifier), 
+                data = results_ByFreq, family = Gamma(link=log),
+                control=glmerControl(optimizer = "optimx", calc.derivs = FALSE,                            optCtrl=list(method="bobyqa")))
+print(summary(m))
+```
+dprime is significantly higher for low frequency words in the even condition than for the other three situations (low-freq and clumped, or high-freq).
+
+
+## R is significantly better for low-frequency words and for even distributions
+Like d', R is highly skewed so I again decided to fit it with a gamma distribution:
+```{r , echo=FALSE, warning=FALSE, results=FALSE}
+ggplot()+geom_freqpoly(data=results_AllFreq,aes(x=R,y=..density..,color=OrderCondition),bins=30)
+```
+
+This does converge for fitting R. In the fits done separately by frequency, we find a highly significant effect of word frequency, but a marginally non-significant effect of order:
+
+```{r , echo=FALSE, warning=FALSE}
+# I started with this
+#m = lme4::glmer(R ~ WordFreq + StartCondition + OrderCondition  + (1|ParticipantIdentifier),  data = results_ByFreq, family = Gamma(link=log))
+# Used drop1 to remove StartCondition, then checked
+#m = lme4::glmer(R ~ WordFreq * OrderCondition  + (1|ParticipantIdentifier),  data = results_ByFreq, family = Gamma(link=log))
+m = lme4::glmer(R ~ WordFreq * OrderCondition  + (1|ParticipantIdentifier),  data = results_ByFreq, family = Gamma(link=log))
+print(summary(m))
+```
+
+I also explored fitting log(R) with a linear model. Fitting log(R) shows a highly significant effect of word frequency, and a marginally significant effect of order:
+
+```{r , echo=FALSE, warning=FALSE}
+m = lmerTest::lmer(log(R) ~ WordFreq + OrderCondition  + (1|ParticipantIdentifier),  data = results_ByFreq)
+summary(m)
+
+# Also checked
+#m = lmerTest::lmer(log(R) ~ WordFreq * OrderCondition  + (1|ParticipantIdentifier),  data = results_ByFreq)
+# but interaction was NS
+
+#m = lme4::glmer(dprime ~ WordFreq  + (1|ParticipantIdentifier),  data = results_ByFreq, family = Gamma(link=log))
+# Fit is singular with no significant effects
+
+
+#m = lmerTest::lmer(R ~ WordFreq + OrderCondition + StartCondition  + (1|ParticipantIdentifier),  data = results_ByFreq)
+
+```
+
+When we look at the fits to all data, the effect of order is significant whether we fit R with a gamma distribution, or log(R) with a Gaussian. 
+```{r , echo=FALSE, warning=FALSE}
+m = glm(R ~  OrderCondition   , data = results_AllFreq, family = Gamma(link=log))
+print(summary(m))
+m = lm(log(R) ~  OrderCondition   , data = results_AllFreq)
+print(summary(m))
+```
+
+So, I feel fairly safe in concluding that there are significant effects both of word frequency and order R is higher for low-frequency words and for the even distribution. I think the order effect probably didn't show up in the mixed-model just because there was more noise when R is fitted to less data.
+
+## Comparing Gaussian and Gamma-distribution fits for R
+I wanted to justify my choice of a gamma distribution.
+
+I feel we have to be a bit careful about fitting a Gaussian model. Here is the distribution of log(R) for a linear mixed-model fitted to the by-frequency data, log(R) ~ WordFreq + (1|ID), with the fitted Gaussians marked on (vertical lines mark the means):
+```{r , echo=FALSE, warning=FALSE, results=FALSE}
+m = lmerTest::lmer(log(R) ~ WordFreq  + (1|ParticipantIdentifier),  data = results_ByFreq)
+s=summary(m)
+c = s$coefficients
+sigma = 1.293 # don't know how to read this off the fitted model but I've taken it from the SD of residuals.
+mHi = c["(Intercept)","Estimate"]
+mLo = mHi + c["WordFreqLoFreq","Estimate"]
+xx=seq(min(log(results_AllFreq$R)),max(log(results_AllFreq$R)),length=100)
+fitHi = data.frame(xx)
+fitHi$pdf = dnorm(xx,mean=mHi,sd=sigma)
+fitLo = data.frame(xx)
+fitLo$pdf = dnorm(xx,mean=mLo,sd=sigma)
+ggplot() + geom_freqpoly(data=results_ByFreq,aes(x=log(R),y=..density..,color=WordFreq),bins=30) +
+  geom_vline(xintercept=mHi,color="red" ) + geom_vline(xintercept=mLo,color="blue" ) + geom_line(data=fitHi,aes(x=xx,y=pdf),color="red") +
+  geom_line(data=fitLo,aes(x=xx,y=pdf),color="blue")
+
+
+# NB this is the same thing if you fit by order as well:
+# m = lmerTest::lmer(log(R) ~ WordFreq + OrderCondition  + (1|ParticipantIdentifier),  data = results_ByFreq)
+# s=summary(m)
+# c = s$coefficients
+# sigma = 1.293 # don't know how to read this off the fitted model but I've taken it from the SD of residuals.
+# mHiClumped = c["(Intercept)","Estimate"]
+# mLoClumped = mHiClumped + c["WordFreqLoFreq","Estimate"]
+# mHiEven = mHiClumped + c["OrderConditionEven","Estimate"]
+# mLoEven = mLoClumped + c["OrderConditionEven","Estimate"]
+# xx=seq(min(log(results_AllFreq$R)),max(log(results_AllFreq$R)),length=100)
+# fitHi = data.frame(xx)
+# fitHi$pdf = dnorm(xx,mean=mHiClumped,sd=sigma)
+# fitLo = data.frame(xx)
+# fitLo$pdf = dnorm(xx,mean=mLoClumped,sd=sigma)
+# ggplot() + geom_freqpoly(data=results_ByFreq,aes(x=log(R),y=..density..,color=WordFreq),bins=30) +
+#    geom_vline(xintercept=mHiClumped,color="red" ) + geom_vline(xintercept=mLoClumped,color="blue" ) +
+#    geom_vline(xintercept=mHiEven,color="red",linetype = "longdash" ) + geom_vline(xintercept=mLoEven,color="blue" ,linetype = "longdash") + 
+#   geom_line(data=fitHi,aes(x=xx,y=pdf),color="red") + 
+#   geom_line(data=fitLo,aes(x=xx,y=pdf),color="blue")
+
+```
+
+The model is thus a poor description of the data. It's had to put the mean of the Gaussians in between the two peaks, so the residuals are thus quite non-normal, contradictory to the model assumptions:
+```{r , echo=FALSE, warning=FALSE, results=FALSE}
+ggplot()+geom_freqpoly(aes(x=s$residuals),bins=30)
+```
+
+The distribution of residuals has a central dip and then peaks on either side, instead of a central peak. 
+
+
+Here are the fitted distributions for one of the gamma models. This is "R ~ OrderCondition" for the  The frequency polygons show the distribution of fitted R for the two cases. The smooth curves show the fitted gamma distributions. The vertical lines mark the means of these.
+```{r , echo=FALSE, warning=FALSE}
+m = glmer(R ~ WordFreq  + (1|ParticipantIdentifier), data = results_ByFreq, family = Gamma(link=log))
+s=summary(m)
+c=s$coefficients
+meanHi = exp(c["(Intercept)","Estimate"]) # intercept term
+meanLo = exp(c["(Intercept)","Estimate"]+c["WordFreqLoFreq","Estimate"]) # intercept term + x=1
+#dispersion is 1/shape parameter of gamma
+sigma = 0.8826  # SD of residuals
+shape = 1/sigma^2
+
+rr=seq(cutoff,max(results_ByFreq$R),length=100)
+fitHi = data.frame(rr)
+fitHi$pdf = dgamma(rr,shape=shape,scale = meanHi/shape)
+fitLo = data.frame(rr)
+fitLo$pdf = dgamma(rr,shape=shape,scale = meanLo/shape)
+ggplot()+geom_freqpoly(data=results_ByFreq,aes(x=R,y=..density..,color=WordFreq),bins=20)+
+  geom_line(data=fitHi,aes(x=rr,y=pdf),color="red")+
+  geom_line(data=fitLo,aes(x=rr,y=pdf),color="blue") +
+  geom_vline(xintercept=meanHi,color="red" ) + geom_vline(xintercept=meanLo,color="blue" ) 
+```
+
+This model may not be perfect, but I think it's clear it's a far better description of the data, as reflected in its far lower AIC (for the same number of fit parameters)
+
+Here is the same thing for "R ~ OrderCondition" fitted to all data.
+
+```{r , echo=FALSE, warning=FALSE}
+m = glm(R ~ OrderCondition, data = results_AllFreq, family = Gamma(link=log))
+meanClumped = exp(m$coefficients[1]) # intercept term
+meanEven = exp(m$coefficients[1]+m$coefficients[2]) # intercept term + x=1
+#dispersion is 1/shape parameter of gamma
+shape = MASS::gamma.shape(m)$alpha
+
+rr=seq(cutoff,max(results_AllFreq$R),length=100)
+fitEven = data.frame(rr)
+fitEven$pdf = dgamma(rr,shape=shape,scale = meanEven/shape)
+fitClumped = data.frame(rr)
+fitClumped$pdf = dgamma(rr,shape=shape,scale = meanClumped/shape)
+ggplot()+geom_freqpoly(data=results_ByFreq,aes(x=R,y=..density..,color=WordFreq),bins=20)+
+  geom_line(data=fitClumped,aes(x=rr,y=pdf),color="red")+
+  geom_line(data=fitEven,aes(x=rr,y=pdf),color="blue") +
+  geom_vline(xintercept=meanEven,color="red" ) + geom_vline(xintercept=meanClumped,color="blue" ) 
+```
+
+It's obvious that this is a far better fit than a Gaussian would be!
+
+
+## Check robustness
+
+Tracking how significance varies as a function of the amount of data collected. Here, I'm plotting the significance reported by a Wilcoxon test comparing R in the even vs clumped condition, for the first N subjects (N plotted along x-axis). I don't know if the number of subjects was set in advance but want to check the result isn't very sensitive to exactly when we stopped.
+
+```{r , echo=FALSE, warning=FALSE, results=FALSE}
+results_AllFreq = results_AllFreq[order(results_AllFreq$CompletionDate),]
+
+n = nrow(results_AllFreq)
+p = replicate(n,NA)
+for (j in 15:n) {
+  wR2 = wilcox.test(R~OrderCondition,data=results_AllFreq[1:j,])
+  p[j] = wR2$p.value
+}
+robustness = data.frame(ndata = seq(1:n), Rsignificance = p)
+ggplot(data=robustness,aes(x=ndata,y=Rsignificance)) + geom_line(color="red") + geom_hline(yintercept = 0.05, color="blue")
+```
+
+A little bit concerning that had data collection stopped slightly earlier, the result would be NS? 
+
+
+
+## Conclusions
+Overall performance is higher for even word order and for low-frequency words. Fitting the ROC curve suggests that this improvement is due to improved recollection, not familiarity.
+
+
+
+m = lme4::glmer(R ~  OrderCondition + WordFreq   + (1|ParticipantIdentifier),  data = results_ByFreq, family = Gamma(link=log))
+
+
+m = lme4::glmer(R ~  OrderCondition    + (1|ParticipantIdentifier),  data = results_ByFreq, family = Gamma(link=log))
+
+ggplot(data=results_ByFreq,aes(x=OrderCondition,y=R,color=WordFreq)) + geom_violin()+ geom_quasirandom(dodge.width=0.8) + geom_boxplot(alpha=0)
+
+
+ggplot(data=results_ByFreq,aes(x=WordFreq,y=R,color=OrderCondition)) + geom_violin()+ geom_quasirandom(dodge.width=0.8) + geom_boxplot(alpha=0)
+
+ggplot(data=results_ByFreq,aes(x=WordFreq,y=R)) + geom_violin()+ geom_quasirandom(aes(color=OrderCondition)) + geom_boxplot(alpha=0)
+
+ggplot(data=results_ByFreq,aes(x=OrderCondition,y=R)) + geom_violin()+ geom_quasirandom(aes(color=WordFreq)) + geom_boxplot(alpha=0)
+
+
+m = lme4::glmer(R ~  OrderCondition  + (1|ParticipantIdentifier),  data = filter(results_ByFreq,WordFreq=="LoFreq"), family = Gamma(link=log))
+
+m = lme4::glmer(R ~  OrderCondition  + (1|ParticipantIdentifier),  data = filter(results_ByFreq,WordFreq=="LoFreq"), family = Gamma(link=log),control=glmerControl(optimizer = "optimx", calc.derivs = FALSE,                            optCtrl=list(method="bobyqa")))
+
+
+
+m = glm(R ~  OrderCondition ,  data = results_AllFreq, family = Gamma(link=log))
+ggplot(data=results_AllFreq,aes(x=OrderCondition,y=R)) + geom_violin()+ geom_quasirandom() + geom_boxplot(alpha=0)
+ggplot(data=results_ByFreq,aes(x=OrderCondition,y=R)) + geom_violin()+ geom_quasirandom(aes(color=WordFreq)) + geom_boxplot(alpha=0)
